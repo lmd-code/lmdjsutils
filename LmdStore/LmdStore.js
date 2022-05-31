@@ -13,7 +13,7 @@
      /**
       * Initialise a store
       * @param {string} storeKey - localStorage item key
-      * @param {string} mapKey   - (Optional) Key for identifying Maps when data is stringified, 
+      * @param {string} mapKey   - Optional key for identifying Maps when data is stringified, 
       *                            helps with converting to and from JSON
       */
      constructor(storeKey, mapKey = '_map') {
@@ -24,7 +24,7 @@
          this.mapKey = mapKey;
  
          /** @property {Map} data - Data items in key/value pairs */
-         this.data = this.getStore(storeKey);
+         this.data = this.getStore();
      }
  
      /**
@@ -81,7 +81,7 @@
      
      /**
       * Get value of individual data item by key
-      * @param {string} key Stored data item key
+      * @param {string} key - Stored data item key
       * @returns {*} Item value or null
       */
      getItem(key) {
@@ -101,19 +101,23 @@
      
      /**
       * Set value of individual data item by key
-      * @param {string} key Item key
-      * @param {*} val Item value
+      * @param {string} key    - Item key
+      * @param {*}      val    - Item value
+      * @param {number} noSave - Optional flag to prevent auto saving
       */
-     setItem(key, val) {
+     setItem(key, val, noSave = 0) {
          this.data.set(key, val);
-         this.setStore();
+         if (noSave === 0) {
+            this.setStore();
+         }
      }
      
      /**
       * Set values of multiple data items
-      * @param {Object} objData Item key/value pairs
+      * @param {Object} objData - Item key/value pairs
+      * @param {number} noSave  - Optional flag to prevent auto saving
       */
-     setItems(objData) {
+     setItems(objData, noSave = 0) {
          let setCount = 0;
  
          for (const prop in objData) {
@@ -123,26 +127,28 @@
              }
          }
  
-         if (setCount > 0) {
+         if (setCount > 0 && noSave === 0) {
              this.setStore(); // only save if item has been added
          }
      }
  
      /**
       * Remove individual data item by key
-      * @param {string} key Item key
+      * @param {string} key    - Item key
+      * @param {number} noSave - Optional flag to prevent auto saving
       */
-     removeItem(key) {
-         if (this.data.delete(key)) {
+     removeItem(key, noSave = 0) {
+         if (this.data.delete(key) && noSave === 0) {
              this.setStore(); // only save if successful
          }
      }
  
      /**
       * Remove multiple data items by key
-      * @param {array} keys Item keys
+      * @param {array}  keys   - Item keys
+      * @param {number} noSave - Optional flag to prevent auto saving
       */
-     removeItems(keys) {
+     removeItems(keys, noSave = 0) {
          let delCount = 0;
  
          for (let i = 0; i < keys.length; i++) {
@@ -151,9 +157,17 @@
              }
          }
  
-         if (delCount > 0) {
+         if (delCount > 0 && noSave === 0) {
              this.setStore(); // only save if item has been deleted
          }
+     }
+     
+     /**
+      * Save entire data store, refresh data
+      */
+     saveAll() {
+         this.setStore();
+         this.getStore();
      }
  
      /**
