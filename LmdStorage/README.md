@@ -7,7 +7,7 @@ Internally data is represented as a Map object, which is serialised and stored a
 
 ## Minimum Requirements
 
-- Uses ES6 features, so will break in browsers that don't implement ES6 yet.
+- Uses ECMAScript 6, most browsers can interpret this now.
 
 ## Usage
 
