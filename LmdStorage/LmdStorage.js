@@ -141,8 +141,16 @@ class LmdStorage {
     
     /**
      * Save entire data store, refresh data
+     * @param {Map} mapObj - Map object to overwrite data (replace, not merge)
      */
-    saveAll() {
+    saveAll(mapObj = null) {
+        // Overwrite Map object if param provided
+        if (mapObj !== null && mapObj instanceof Map) {
+            this.data.clear();
+            for (const [key, value] of mapObj) {
+                this.data.set(key, value);
+            }
+        }
         this.setStore();
         this.getStore();
     }
