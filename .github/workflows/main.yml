@@ -1,4 +1,4 @@
-name: Auto Minifier CSS
+name: Auto Minifier
 
 on:
   push:
