@@ -2,7 +2,7 @@
  * @file LmdStorage - a lightweight localStorage wrapper
  * @author LMD-Code
  * @see https://github.com/lmd-code/lmdcode-js-utils
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 'use strict';
@@ -17,7 +17,7 @@ class LmdStorage {
      * @param {string} mapKey - Optional key for identifying Maps when data is stringified, 
      *                          helps with converting to and from JSON
      */
-    constructor(storeKey, mapKey = '_map') {
+     constructor(storeKey, mapKey = '_map') {
         /** @property {string} storeName - Name (key) of localStorage item */
         this.storeName = storeKey;
         
@@ -39,7 +39,7 @@ class LmdStorage {
     
     /**
      * Get localStorage item, then convert JSON string into Map
-     * @returns {Map} - Stored data
+     * @returns{Map} - Stored data
      */
     getStore() {
         return this.mapify(localStorage.getItem(this.storeName));
@@ -59,13 +59,10 @@ class LmdStorage {
     /**
      * Get value of individual data item by key
      * @param {string} key - Stored data item key
-     * @returns {*} - Item value or null
+     * @returns {*} - Item value
      */
     getItem(key) {
-        if (this.data.has(key)) {
-            return this.data.get(key);
-        }
-        return null;
+        return this.data.get(key);
     }
     
     /**
@@ -80,11 +77,11 @@ class LmdStorage {
      * Set value of individual data item by key
      * @param {string} key - Item key
      * @param {*} val - Item value
-     * @param {number} noSave - Optional flag to prevent auto saving
+     * @param {boolean} noSave - Optional flag to prevent auto saving (default: false)
      */
-    setItem(key, val, noSave = 0) {
+    setItem(key, val, noSave = false) {
         this.data.set(key, val);
-        if (noSave === 0) {
+        if (!noSave) {
             this.setStore();
         }
     }
@@ -92,9 +89,9 @@ class LmdStorage {
     /**
      * Set values of multiple data items
      * @param {Object} objData - Item key/value pairs
-     * @param {number} noSave - Optional flag to prevent auto saving
+     * @param {boolean} noSave - Optional flag to prevent auto saving (default: false)
      */
-    setItems(objData, noSave = 0) {
+    setItems(objData, noSave = false) {
         let setCount = 0;
 
         for (const prop in objData) {
@@ -104,7 +101,7 @@ class LmdStorage {
             }
         }
 
-        if (setCount > 0 && noSave === 0) {
+        if (setCount > 0 && !noSave) {
             this.setStore(); // only save if item has been added
         }
     }
@@ -112,10 +109,10 @@ class LmdStorage {
     /**
      * Remove individual data item by key
      * @param {string} key - Item key
-     * @param {number} noSave - Optional flag to prevent auto saving
+     * @param {boolean} noSave - Optional flag to prevent auto saving (default: false)
      */
     removeItem(key, noSave = 0) {
-        if (this.data.delete(key) && noSave === 0) {
+        if (this.data.delete(key) && !noSave) {
             this.setStore(); // only save if successful
         }
     }
@@ -123,7 +120,7 @@ class LmdStorage {
     /**
      * Remove multiple data items by key
      * @param {Array} keys - Item keys
-     * @param {number} noSave - Optional flag to prevent auto saving
+     * @param {boolean} noSave - Optional flag to prevent auto saving (default: false)
      */
     removeItems(keys, noSave = 0) {
         let delCount = 0;
@@ -134,7 +131,7 @@ class LmdStorage {
             }
         }
 
-        if (delCount > 0 && noSave === 0) {
+        if (delCount > 0 && !noSave) {
             this.setStore(); // only save if item has been deleted
         }
     }

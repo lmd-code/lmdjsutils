@@ -1,13 +1,19 @@
 
 # LmdStorage
 
+---
+
+**Note:** As with all scripts in this repository, I made this for my own small projects where dependency on a larger, more feature-rich, library would be overkill. Feel free to use if you think it's helpful for your projects.
+
+---
+
 Lightweight wrapper for `localStorage`. Use a single entry key in `localStorage` to store multiple values in key/value pairs.
 
-Internally data is represented as a `Map` object which is serialised and stored as a JSON string. This allows stored values to be any valid JSON data type instead of just strings. You can even store `Map` objects, they are serialised and restored safely, the only requirement is that item keys must always be a string to be valid JSON.
+Data is represented as a `Map` object which is serialised and stored as a JSON string. This allows stored values to be any valid JSON data type instead of just strings. You can even store other `Map` objects, they are serialised and restored safely, the only requirement is that item keys must always be a string to be valid JSON.
 
 ## Minimum Requirements
 
-- Uses ECMAScript 6, most browsers can interpret this now.
+- ECMAScript 6 (ES6, aka ECMAScript 2015) capable browsers.
 
 ## Usage
 
@@ -27,12 +33,13 @@ Then in your script:
 // If it doesn't exist yet, it will be created when an item is added.
 var $userPrefs = new LmdStorage('userPrefs');
 
-// You can have multiple stores if it makes sense to
-// var $userFaves = new LmdStore('userFaves');
+// You can absolutely have multiple stores if it makes sense to,
+// each one is a separate localStorage entry
+// var $userFaves = new LmdStorage('userFaves');
 
 // Set or update a single item 
 $userPrefs.setItem('theme', 'dark'); // save immediately
-$userPrefs.setItem('theme', 'dark', 1); // with noSave flag (see note #1)
+$userPrefs.setItem('theme', 'dark', true); // with noSave flag (see note #1)
 
 // Set or update multiple items as an object
 $userPrefs.setItems({
@@ -45,7 +52,7 @@ $userPrefs.setItems({
     theme: 'dark',
     showGrid: true,
     numPages: 10
-}, 1); // with noSave flag
+}, true); // with noSave flag
 
 // Get a single item value by key (returns null if the key doesn't exist)
 let theme = $userPrefs.getItem('theme'); // returns string 'dark'
@@ -57,11 +64,11 @@ let allPrefs = $userPrefs.getItems();
 
 // Remove an item by key
 $userPrefs.removeItem('showGrid'); // save immediately
-$userPrefs.removeItem('showGrid', 1); // with noSave flag
+$userPrefs.removeItem('showGrid', true); // with noSave flag
 
 // Remove multiple items by key (keys given as an array)
 $userPrefs.removeItems(['showGrid', 'numPages']);
-$userPrefs.removeItems(['showGrid', 'numPages'], 1); // with noSave flag
+$userPrefs.removeItems(['showGrid', 'numPages'], true); // with noSave flag
 
 // Save all items - overwrites stored data with current state.
 // Useful for when you make several changes using the noSave flag 
@@ -78,13 +85,13 @@ let numItems = $userPrefs.count; // returns number
 
 ### Note 1: `noSave` flag parameter
 
-Methods that modify the data and write to `localStorage` have an optional `noSave` flag parameter (pass a truthy value) to prevent immediate automatic saving. Just remember to call the `saveAll()` method later.
+Methods that modify the data and write to `localStorage` have an optional `noSave` flag parameter (boolean) to prevent immediate automatic saving. Just remember to call the `saveAll()` method later.
 
 ### Note 2: `getItems()` method
 
 The `getItems()` method returns a copy of the internal data `Map` object. You can therefore do everything you can with `Map` objects.
 
-However, it is a *deep copy* and not a reference, so if you update data directly on the returned `Map`, it *will not* update in `localStorage`. You can save it back, however, by explicitely passing the `Map` object as a parameter to the `saveAll()` method.
+However, it is a *deep copy* and not a reference, so if you update data directly on the returned `Map`, it *will not* update in `localStorage`. You can save it back, however, by explicitly passing the `Map` object as a parameter to the `saveAll()` method.
 
 Useful for if you want a working copy of the data and only want to update the storage under certain circumstances (some sort of user interaction, or example).
 
@@ -133,5 +140,10 @@ console.log($myStore.getItem('bar')); // 616
 $myStore.saveAll(mydata);
 
 console.log($myStore.getItem('foo')); // 'Hello Moon'
-console.log($myStore.get('bar')); // null
+console.log($myStore.getItem('bar')); // null
 ```
+
+## @TODO
+
+- Add feature detection method to check if localStorage is available (return bool).
+- Create option (param in constructor method) to use `sessionStorage` instead of `localStorage`.
