@@ -20,7 +20,7 @@ Data is represented as a `Map` object which is serialised and stored as a JSON s
 Include the script in the `<head>` of your HTML document. Javascript classes must be defined (inserted) before they are used.
 
 ```html
-<script src="path/to/LmdStorage.js"></script>
+<script src="path/to/LmdStorage.min.js"></script>
 <script src="path/to/your-script.js"></script>
 ```
 
