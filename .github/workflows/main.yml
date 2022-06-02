@@ -1,7 +1,18 @@
-- name: minisauras
-  # You may pin to the exact commit or the version.
-  # uses: TeamTigers/minisauras@82833fe1effda8c441b82e3ae16bfe7b9c699710
-  uses: TeamTigers/minisauras@v2.0.0
-  with:
-    # Directory reference of which files to be minified
-    directory: # default is ./
+name: minisauras
+
+on: [push]
+
+jobs:
+  read:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: minisauras
+      uses: TeamTigers/minisauras@v2.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.MINIFYME }}
+      id: dir
+      with:
+        directory: './' ## minify all files from root directory
