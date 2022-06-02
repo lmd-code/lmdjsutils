@@ -147,5 +147,3 @@ console.log($myStore.getItem('bar')); // null
 
 - Add feature detection method to check if localStorage is available (return bool).
 - Create option (param in constructor method) to use `sessionStorage` instead of `localStorage`.
-
-[tmp](https://github.com/TeamTigers/minisauras)
