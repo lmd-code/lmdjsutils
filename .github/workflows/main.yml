@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   read:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
@@ -12,7 +12,7 @@ jobs:
     - name: minisauras
       uses: TeamTigers/minisauras@v2.0.0
       env:
-        GITHUB_TOKEN: ${{ secrets.MINIFYME }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       id: dir
       with:
         directory: './' ## minify all files from root directory
