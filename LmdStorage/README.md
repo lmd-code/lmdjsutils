@@ -37,6 +37,9 @@ var $userPrefs = new LmdStorage('userPrefs');
 // each one is a separate localStorage entry
 // var $userFaves = new LmdStorage('userFaves');
 
+// Check localStorage is available in user's browser
+const storageAvailable = $userPrefs.isAvailable(); // returns boolean true/false
+
 // Set or update a single item 
 $userPrefs.setItem('theme', 'dark'); // save immediately
 $userPrefs.setItem('theme', 'dark', true); // with noSave flag (see note #1)

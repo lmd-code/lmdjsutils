@@ -2,7 +2,7 @@
  * @file LmdStorage - a lightweight localStorage wrapper
  * @author LMD-Code
  * @see https://github.com/lmd-code/lmdcode-js-utils
- * @version 1.2.1
+ * @version 1.3.0
  */
 
 'use strict';
@@ -37,6 +37,31 @@ class LmdStorage {
         return this.data.size;
     }
     
+    /**
+     * Detect if localStorage is available in browser
+     * @returns {boolean}
+     */
+    isAvailable() {
+        if (typeof Storage === "undefined") return false;
+
+        try {
+            const testKey = '_lmdstorage_test';
+            const testValue = 'LmdStorage Test';
+            
+            localStorage.setItem(testKey, testValue);
+            
+            if (localStorage.getItem(testKey) === testValue) {
+                localStorage.removeItem(testKey);
+                return true;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        
+        return false;
+    }
+
+
     /**
      * Get localStorage item, then convert JSON string into Map
      * @returns {Map} - Stored data
