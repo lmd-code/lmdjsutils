@@ -2,7 +2,7 @@
  * @file LmdStorage - a lightweight localStorage wrapper
  * @author LMD-Code
  * @see https://github.com/lmd-code/lmdcode-js-utils
- * @version 1.2.1
+ * @version 1.3.1
  */
 
 'use strict';
@@ -14,48 +14,83 @@ class LmdStorage {
     /**
      * Initialise a store
      * @param {string} storeKey - localStorage item key
-     * @param {string} mapKey - Optional key for identifying Maps when data is stringified, 
+     * @param {string} mapKey - Optional key for identifying Maps when data is serialised, 
      *                          helps with converting to and from JSON
      */
     constructor(storeKey, mapKey = '_map') {
-        /** @property {string} storeName - Name (key) of localStorage item */
+        /** @private {string} storeName - Name (key) of localStorage item */
         this.storeName = storeKey;
         
-        /** @property {string} mapKey - Key for identifying Map objects when stringified as JSON */
+        /** @private {string} mapKey - Key for identifying Map objects when stringified as JSON */
         this.mapKey = mapKey;
 
-        /** @property {Map} data - Data items in key/value pairs */
+        /** @private {Map} data - Data items in key/value pairs */
         this.data = this.getStore();
+
+        /** @private {boolean} _isEnabled - Stores isEnabled result */
+        this._isEnabled = null;
     }
 
     /**
-     * Number of stored items
-     * @returns {number} - Number of items
+     * @property {boolean} isEnabled - Detect if localStorage is available in user's browser
+     */
+    get isEnabled() {
+        if (this._isEnabled === undefined || this._isEnabled === null) {
+            try {
+                const testKey = '_lmdstorage_test';
+                const testValue = 'LmdStorage Test';
+                
+                localStorage.setItem(testKey, testValue);
+                
+                if (localStorage.getItem(testKey) === testValue) {
+                    localStorage.removeItem(testKey);
+                    this._isEnabled = true;
+                } else {
+                    this._isEnabled = false;
+                }
+            } catch (e) {
+                this._isEnabled = false;
+            }
+        }
+
+        return this._isEnabled;
+    }
+
+    /**
+     * @property {number} count - Number of stored items
      */
     get count() {
         if (this.data === undefined || this.data === null) return 0;
         return this.data.size;
     }
-    
+
     /**
      * Get localStorage item, then convert JSON string into Map
+     * @private
      * @returns {Map} - Stored data
      */
     getStore() {
-        return this.mapify(localStorage.getItem(this.storeName));
+        let savedData;
+        try {
+            savedData = localStorage.getItem(this.storeName);
+        } catch (e) {
+            console.warn('Could not get saved data, a blank store has been created.');
+        }
+       return this.mapify(savedData);
     }
-    
+
     /**
      * Set localStorage item after converting Map back into JSON string
+     * @private
      */
     setStore() {
         try {
             localStorage.setItem(this.storeName, this.jsonify(this.data));
         } catch (e) {
-            console.error(e.message);
+            console.warn("Could not save data.");
         }
     }
-    
+
     /**
      * Get value of individual data item by key
      * @param {string} key - Stored data item key
@@ -64,7 +99,7 @@ class LmdStorage {
     getItem(key) {
         return this.data.get(key);
     }
-    
+
     /**
      * Get entire Map object (deep copy)
      * @returns {Map} - Stored data
@@ -72,7 +107,7 @@ class LmdStorage {
     getItems() {
         return this.mapify(this.jsonify(this.data));
     }
-    
+
     /**
      * Set value of individual data item by key
      * @param {string} key - Item key
@@ -85,7 +120,7 @@ class LmdStorage {
             this.setStore();
         }
     }
-    
+
     /**
      * Set values of multiple data items
      * @param {Object} objData - Item key/value pairs
@@ -135,7 +170,7 @@ class LmdStorage {
             this.setStore(); // only save if item has been deleted
         }
     }
-    
+
     /**
      * Save entire data store, refresh data
      * @param {Map} mapObj - Map object to overwrite data (replace, not merge)
@@ -157,24 +192,29 @@ class LmdStorage {
      */
     clearAll() {
         this.data.clear(); // clear Map object
-        localStorage.clear(this.storeName); // remove localStore entry
+        try {
+            localStorage.clear(this.storeName); // remove localStore entry
+        } catch (e) {
+            console.warn('Could not clear stored data.')
+        }
     }
 
     /**
      * Convert Map object to JSON string
+     * @private
      * @param {Map} mapObj - Map object
      * @returns {string} - JSON string
      */
     jsonify(mapObj) {
         if (mapObj instanceof Map) {
             try {
-                let jsonStr = JSON.stringify(mapObj, (key, value) => {
+                const jsonStr = JSON.stringify(mapObj, (key, value) => {
                     if (value instanceof Map) return {[this.mapKey]: Array.from(value.entries())};
                     return value;
                 });
                 if (jsonStr !== undefined) return jsonStr;
             } catch (e) {
-                console.error(e.message);
+                console.warn('Could not create JSON string.');
             }
         } 
         return '{}'; // empty JSON string
@@ -182,20 +222,23 @@ class LmdStorage {
 
     /**
      * Convert JSON string to Map object
+     * @private
      * @param {string} jsonStr - JSON string
      * @returns {Map} - Map object
      */
     mapify(jsonStr) {
-        try {
-            let mapObj = JSON.parse(jsonStr, (key, value) => {
-                if (typeof value === 'object' && value !== null) {
-                    if (value.hasOwnProperty(this.mapKey)) return new Map(value[this.mapKey]);
-                }
-                return value;
-            });
-            if (mapObj instanceof Map) return mapObj; // only return if it is a Map
-        } catch (e) {
-            console.error(e.message);
+        if (jsonStr !== undefined && jsonStr !== null && jsonStr !== '') {
+            try {
+                const mapObj = JSON.parse(jsonStr, (key, value) => {
+                    if (typeof value === 'object' && value !== null) {
+                        if (value.hasOwnProperty(this.mapKey)) return new Map(value[this.mapKey]);
+                    }
+                    return value;
+                });
+                if (mapObj instanceof Map) return mapObj; // only return if it is a Map
+            } catch (e) {
+                console.warn('Could not parse JSON string.');
+            }
         }
         return new Map(); // empty Map
     }
