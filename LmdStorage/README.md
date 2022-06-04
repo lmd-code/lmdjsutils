@@ -31,64 +31,54 @@ Then in your script:
 
 // Initialise with the name of your store to make ready to use.
 // If it doesn't exist yet, it will be created when an item is added.
-var $userPrefs = new LmdStorage('userPrefs');
+const $myStorage = new LmdStorage('mystore');
 
-// You can absolutely have multiple stores if it makes sense to,
-// each one is a separate localStorage entry
-// var $userFaves = new LmdStorage('userFaves');
+// You can have multiple stores, each one is a separate localStorage entry:
+const $userPrefs = new LmdStorage('userPrefs'); // user's website preferences
+const $formData = new LmdStorage('formData'); // unfinished form data/blog posts/comments etc
 
 // Check localStorage is available in user's browser
-const storageAvailable = $userPrefs.isAvailable(); // returns boolean true/false
-
-// Set or update a single item 
-$userPrefs.setItem('theme', 'dark'); // save immediately
-$userPrefs.setItem('theme', 'dark', true); // with noSave flag (see note #1)
-
-// Set or update multiple items as an object
-$userPrefs.setItems({
-    theme: 'dark',
-    showGrid: true,
-    numPages: 10
-}); // save immediately
-
-$userPrefs.setItems({
-    theme: 'dark',
-    showGrid: true,
-    numPages: 10
-}, true); // with noSave flag
-
-// Get a single item value by key (returns null if the key doesn't exist)
-let theme = $userPrefs.getItem('theme'); // returns string 'dark'
-let showGrid = $userPrefs.getItem('showGrid'); // returns boolean 'true'
-let numPages = $userPrefs.getItem('numPages'); // returns number '10'
-
-// Get all items as a Map object (see note #2)
-let allPrefs = $userPrefs.getItems();
-
-// Remove an item by key
-$userPrefs.removeItem('showGrid'); // save immediately
-$userPrefs.removeItem('showGrid', true); // with noSave flag
-
-// Remove multiple items by key (keys given as an array)
-$userPrefs.removeItems(['showGrid', 'numPages']);
-$userPrefs.removeItems(['showGrid', 'numPages'], true); // with noSave flag
-
-// Save all items - overwrites stored data with current state.
-// Useful for when you make several changes using the noSave flag 
-// and want to save just once at the end.
-$userPrefs.saveAll();
-$userPrefs.saveAll(mapObject); // Pass a new Map object (replaces data)
-
-// Remove entire store (clears internal data and deletes from localStorage)
-$userPrefs.clearAll();
+const storageAvailable = $myStorage.isEnabled; // returns boolean true/false
 
 // Get number of stored items
-let numItems = $userPrefs.count; // returns number
+let numItems = $myStorage.count; // returns number
+
+// Set or update a single item 
+$myStorage.setItem('foo', 'Hello World'); // save immediately
+$myStorage.setItem('foo', 'Hello World', true); // with noSave flag (see note #1)
+
+// Set or update multiple items as an object
+$myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}); // save immediately
+$myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}, true); // with noSave flag
+
+// Get a single item value by key (returns 'undefined' if the key doesn't exist)
+let foo = $myStorage.getItem('foo'); // returns string 'Hello World'
+let bar = $myStorage.getItem('bar'); // returns boolean 'true'
+let baz = $myStorage.getItem('baz'); // returns number '42'
+
+// Get all items as a Map object (see note #2)
+let allPrefs = $myStorage.getItems();
+
+// Remove an item by key
+$myStorage.removeItem('bar'); // save immediately
+$myStorage.removeItem('bar', true); // with noSave flag
+
+// Remove multiple items by key (pass keys as an array)
+$myStorage.removeItems(['bar', 'baz']);
+$myStorage.removeItems(['bar', 'baz'], true); // with noSave flag
+
+// Save all items - overwrites stored data with current state.
+// Useful for when you make several changes using the noSave flag and want to save just once.
+$myStorage.saveAll();
+$myStorage.saveAll(mapObject); // Pass a new Map object (replaces original data)
+
+// Remove entire store (clears internal data and deletes from localStorage)
+$myStorage.clearAll();
 ```
 
 ### Note 1: `noSave` flag parameter
 
-Methods that modify the data and write to `localStorage` have an optional `noSave` flag parameter (boolean) to prevent immediate automatic saving. Just remember to call the `saveAll()` method later.
+Methods that modify the data and write to `localStorage` have an optional `noSave` flag parameter (boolean) to prevent immediate automatic saving. Just remember to call the `saveAll()` method later to commit changes.
 
 ### Note 2: `getItems()` method
 
@@ -100,24 +90,25 @@ Useful for if you want a working copy of the data and only want to update the st
 
 ```javascript
 
-$myStore = new LmdStorage('mystore');
+const $myStorage = new LmdStorage('mystore');
 
 // Set some data
-$myStore.setItems({
+$myStorage.setItems({
     foo: 'Hello Earth',
     bar: 616
 });
 
 // Grab a copy as a Map object
-const mydata = $myStore.getItems();
+let mydata = $myStorage.getItems();
 
 // Iterate data
-let out = 'Your Data\n====================\n';
+let out = '';
+
 mydata.forEach((value, key) => {
     out += key + ': ' + value + '\n';
 });
 
-console.log(out);
+console.log('Your Data\n====================\n' + out);
 /*
  * Your Data
  * ====================
@@ -131,22 +122,21 @@ console.log(out);
 mydata.set('foo', 'Hello Moon');
 
 console.log(mydata.get('foo')); // 'Hello Moon'
-console.log($myStore.getItem('foo')); // 'Hello Earth'
+console.log($myStorage.getItem('foo')); // 'Hello Earth'
 
 // Delete
 mydata.delete('bar'); 
 
 console.log(mydata.get('bar')); // undefined
-console.log($myStore.getItem('bar')); // 616
+console.log($myStorage.getItem('bar')); // 616
 
 // Write changes back to storage (will replace data, not merge!)
-$myStore.saveAll(mydata);
+$myStorage.saveAll(mydata);
 
-console.log($myStore.getItem('foo')); // 'Hello Moon'
-console.log($myStore.getItem('bar')); // null
+console.log($myStorage.getItem('foo')); // 'Hello Moon'
+console.log($myStorage.getItem('bar')); // undefined
 ```
 
 ## @TODO
 
-- Add feature detection method to check if localStorage is available (return bool).
-- Create option (param in constructor method) to use `sessionStorage` instead of `localStorage`.
+- Work with both `localStorage` *and* `sessionStorage`.
