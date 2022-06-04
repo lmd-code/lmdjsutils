@@ -5,3 +5,9 @@
 .gitattributes export-ignore
 .gitignore     export-ignore
 .gitkeep       export-ignore
+
+#
+# linguist
+#
+*.min.js linguist-generated
+*.md linguist-generated
