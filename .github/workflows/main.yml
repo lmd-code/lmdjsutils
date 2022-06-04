@@ -2,7 +2,10 @@ name: Auto Minifier
 
 on:
   push:
+    branches:
+      - main
     paths:
+      - '**.css'
       - '**.js'
 
 jobs:
