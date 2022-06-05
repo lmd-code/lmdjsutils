@@ -1,25 +1,29 @@
 /**
- * @file LmdStorage - a lightweight localStorage wrapper
+ * @file LmdStorage - a lightweight browser storage wrapper
  * @author LMD-Code
  * @see https://github.com/lmd-code/lmdcode-js-utils
- * @version 1.3.1
+ * @version 1.4
  */
 
 'use strict';
 
 /**
- * Wrapper class for interacting with localStorage on an individual store level
+ * Wrapper class for interacting with browser storage (localStorage/sessionStorage) on an individual storage item level
  */
 class LmdStorage {
     /**
      * Initialise a store
-     * @param {string} storeKey - localStorage item key
+     * @param {string} storeKey - Name (key) of browser storage item
+     * @param {string} storeType - Type of browser storage to use, 'local' (default) or 'session'
      * @param {string} mapKey - Optional key for identifying Maps when data is serialised, 
      *                          helps with converting to and from JSON
      */
-    constructor(storeKey, mapKey = '_map') {
-        /** @private {string} storeName - Name (key) of localStorage item */
+    constructor(storeKey, storeType = 'local', mapKey = '_map') {
+        /** @private {string} storeName - Storage item key */
         this.storeName = storeKey;
+
+        /** @private {string} storeType - Type of storage ('local' or 'session') */
+        this.storageType = storeType;
         
         /** @private {string} mapKey - Key for identifying Map objects when stringified as JSON */
         this.mapKey = mapKey;
@@ -32,21 +36,31 @@ class LmdStorage {
     }
 
     /**
-     * @property {boolean} isEnabled - Detect if localStorage is available in user's browser
+     * Detect if browser storage is available in user's browser
+     * @property {boolean} isEnabled
      */
     get isEnabled() {
         if (this._isEnabled === undefined || this._isEnabled === null) {
+            const testKey = '_lmdstorage_test';
+            const testValue = 'LmdStorage Test';
+
             try {
-                const testKey = '_lmdstorage_test';
-                const testValue = 'LmdStorage Test';
-                
-                localStorage.setItem(testKey, testValue);
-                
-                if (localStorage.getItem(testKey) === testValue) {
-                    localStorage.removeItem(testKey);
-                    this._isEnabled = true;
+                if (this.storageType === 'session') {
+                    sessionStorage.setItem(testKey, testValue);
+                    if (sessionStorage.getItem(testKey) === testValue) {
+                        sessionStorage.removeItem(testKey);
+                        this._isEnabled = true;
+                    } else {
+                        this._isEnabled = false;
+                    }
                 } else {
-                    this._isEnabled = false;
+                    localStorage.setItem(testKey, testValue);
+                    if (localStorage.getItem(testKey) === testValue) {
+                        localStorage.removeItem(testKey);
+                        this._isEnabled = true;
+                    } else {
+                        this._isEnabled = false;
+                    }
                 }
             } catch (e) {
                 this._isEnabled = false;
@@ -62,33 +76,6 @@ class LmdStorage {
     get count() {
         if (this.data === undefined || this.data === null) return 0;
         return this.data.size;
-    }
-
-    /**
-     * Get localStorage item, then convert JSON string into Map
-     * @private
-     * @returns {Map} - Stored data
-     */
-    getStore() {
-        let savedData;
-        try {
-            savedData = localStorage.getItem(this.storeName);
-        } catch (e) {
-            console.warn('Could not get saved data, a blank store has been created.');
-        }
-       return this.mapify(savedData);
-    }
-
-    /**
-     * Set localStorage item after converting Map back into JSON string
-     * @private
-     */
-    setStore() {
-        try {
-            localStorage.setItem(this.storeName, this.jsonify(this.data));
-        } catch (e) {
-            console.warn("Could not save data.");
-        }
     }
 
     /**
@@ -188,14 +175,53 @@ class LmdStorage {
     }
 
     /**
-     * Clear (remove) data store
+     * Clear (remove) storage item
      */
     clearAll() {
         this.data.clear(); // clear Map object
         try {
-            localStorage.clear(this.storeName); // remove localStore entry
+            if (this.storageType === 'session') {
+                sessionStorage.clear(this.storeName); // remove sessionStorage item
+            } else {
+                localStorage.clear(this.storeName); // remove localStorage item
+            }
         } catch (e) {
             console.warn('Could not clear stored data.')
+        }
+    }
+
+    /**
+     * Get storage item, then convert JSON string into Map
+     * @private
+     * @returns {Map} - Stored data
+     */
+     getStore() {
+        let savedData;
+        try {
+            if (this.storageType === 'session') {
+                savedData = sessionStorage.getItem(this.storeName);
+            } else {
+                savedData = localStorage.getItem(this.storeName);
+            }
+        } catch (e) {
+            console.warn('Could not get saved data, a blank store has been created.');
+        }
+       return this.mapify(savedData);
+    }
+
+    /**
+     * Set storage item after converting Map back into JSON string
+     * @private
+     */
+    setStore() {
+        try {
+            if (this.storageType === 'session') {
+                sessionStorage.setItem(this.storeName, this.jsonify(this.data));
+            } else {
+                localStorage.setItem(this.storeName, this.jsonify(this.data));
+            }
+        } catch (e) {
+            console.warn("Could not save data.");
         }
     }
 
