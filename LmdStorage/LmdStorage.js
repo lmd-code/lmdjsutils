@@ -1,8 +1,10 @@
 /**
- * @file LmdStorage - a lightweight browser storage wrapper
- * @author LMD-Code
- * @see https://github.com/lmd-code/lmdcode-js-utils
- * @version 1.4
+ * 
+ * LmdStorage - a lightweight browser storage wrapper
+ * @copyright LMD-Code 2022
+ * @see https://github.com/lmd-code/lmdcode-js-utils/
+ * @version 1.4.1
+ * @license GPLv3 
  */
 
 'use strict';
