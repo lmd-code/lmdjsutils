@@ -24,7 +24,7 @@ Include the script in the `<head>` of your HTML document. Javascript classes mus
 <script src="path/to/your-script.js"></script>
 ```
 
-### Initialise: `new lmdStorage(storeName, storeType, mapKey)`
+### Initialise: `new LmdStorage(storeName, storeType, mapKey)`
 
 Initialise with the name of your store and the type of browser storage to use ('local' or 'session').
 

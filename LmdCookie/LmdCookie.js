@@ -15,30 +15,30 @@
 class LmdCookie {
     /**
      * Initialise a cookie
-     * @param {string} cookieKey - Name (key) of browser cookie
+     * @param {string} name - Name (key) of browser cookie
      * @param {string|null} path - path for cookie (default: null)
      * @param {string|null} domain - cookie domain (default: null)
      * @param {boolean} secure - only send over https (default: false)
      * @param {string} sameSite - same-origin/cross-site policy (default: 'lax')
      * expires
      */
-    constructor(cookieKey, path = null, domain = null, secure = false, sameSite = 'lax') {
-        /** @private {string} cookieName - Cookie item key */
-        this.cookieName = cookieKey;
+    constructor(name, path = null, domain = null, secure = false, sameSite = 'lax') {
+        /** @private {string} cookieName */
+        this.cookieName = name;
         
-        /** @private {string|null} cookiePath - path for cookie */
+        /** @private {string|null} cookiePath */
         this.cookiePath = path;
         
-        /** @private {string|null} cookieDomain - cookie domain */
+        /** @private {string|null} cookieDomain */
         this.cookieDomain = domain;
         
-        /** @private {boolean} cookieSecure - only send over https */
+        /** @private {boolean} cookieSecure */
         this.cookieSecure = (typeof secure !== 'boolean') ? false : secure;
         
-        /** @private {string} cookieSamesite - same-site/cross-origin policy */
+        /** @private {string} cookieSamesite */
         this.cookieSamesite = (typeof sameSite !== 'string' || sameSite === '') ? 'Lax' : sameSite;
 
-        /** @private {mixed} data - Cookie data (can be string, array or null) */
+        /** @private {mixed} data */
         this.data = this.fetchCookie();
 
         /** @private {boolean} _isEnabled - Stores isEnabled result */
@@ -54,7 +54,7 @@ class LmdCookie {
     }
 
     /**
-     * Set the cookie value
+     * Set/update the cookie value
      * @param {mixed} value 
      * @param {Date|string} expires Cookie expiration, either a Date object or a token string
      */
@@ -103,29 +103,28 @@ class LmdCookie {
     }
 
     /**
-     * Calculate an cookie expiration date from a token string
+     * Calculate an cookie expiration date from a date token string
      * 
-     * Token string format is a case-insenstive sequence of `nX` sparated by spaces, 
-     * where 'n' is a number (integer) and 'X' a date token (e.g., 'Y' for years).
+     * The date token string format is a *case-insensitive* sequence of 
+     * digit/letter pairs, with each pair separated by a space.
      * 
-     * Valid Date Tokens:
+     * For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours 
      * 
-     * - `Y` - Year ('`2Y`' = 2 years)
-     * - `M` - Month ('`3M`' = 3 months)
-     * - `D` - Days ('`5D`' = 5 days)
-     * - `H` - Hours ('`6H`' = 6 hours)
-     * - `Mi` - Minutes ('`30Mi`' = 30 minutes)
-     * - `S` - Seconds ('`20s`' = 20 seconds)
-     * - `W` - Weeks ('`2w`' = 2 weeks)
+     * Date Tokens:
      * 
-     * Example: '`1y 6m 12h`' = 1 year, 6 months and 12 hours 
+     * - `Y` - Year (`2y` = 2 years)
+     * - `M` - Month (`3m` = 3 months)
+     * - `D` - Days (`5d` = 5 days)
+     * - `H` - Hours (`6h` = 6 hours)
+     * - `Mi` - Minutes (`30mi` = 30 minutes, note the two-letter code)
+     * - `S` - Seconds (`20s` = 20 seconds)
+     * - `W` - Weeks (`2w` = 2 weeks)
      * 
      * @param {string} expires 
      * @returns string
      */
     static calcExpiresDate(expires) {
         const now = new Date();
-        //console.log(`now : ${now}`);
 
         const tokens = expires.split(' ');
 
@@ -160,8 +159,6 @@ class LmdCookie {
                 default:
                     break;
             }
-            
-            //console.log(`${tok} + ${num} : ${now}`);
         }
         return  now.toGMTString();
     }
