@@ -1,9 +1,8 @@
 /**
- * 
  * LmdStorage - a lightweight browser cookie wrapper
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
- * @version 0.1.0 - alpha
+ * @version 0.2.0 - alpha
  * @license GPLv3 
  */
 
@@ -11,20 +10,25 @@
 
 /**
  * Wrapper class for interacting with browser cookies
+ * @class
+ * 
+ * @todo Determine if cookies are enabled/available in browser and provide warning if not.
+ * @todo Override global cookie settings (path/domain/secure etc) on a per-cookie basis.
+ * @todo Session cookies?
  */
 class LmdCookie {
     /**
      * Initialise a cookie
-     * @param {string} name - Name (key) of browser cookie
+     * @param {string} prefix - Prefix for cookie names (will ignore any cookie not set with prefix)
      * @param {string|null} path - path for cookie (default: null)
      * @param {string|null} domain - cookie domain (default: null)
      * @param {boolean} secure - only send over https (default: false)
-     * @param {string} sameSite - same-origin/cross-site policy (default: 'lax')
+     * @param {string} sameSite - same-origin/cross-site policy (default: 'Lax')
      * expires
      */
-    constructor(name, path = null, domain = null, secure = false, sameSite = 'lax') {
-        /** @private {string} cookieName */
-        this.cookieName = name;
+    constructor(prefix = '', path = null, domain = null, secure = false, sameSite = 'Lax') {
+        /** @private {string} cookiePrefix */
+        this.cookiePrefix = (typeof sameSite === 'string' && sameSite !== '') ? prefix + '_' : '';
         
         /** @private {string|null} cookiePath */
         this.cookiePath = path;
@@ -33,73 +37,94 @@ class LmdCookie {
         this.cookieDomain = domain;
         
         /** @private {boolean} cookieSecure */
-        this.cookieSecure = (typeof secure !== 'boolean') ? false : secure;
+        this.cookieSecure = (typeof secure === 'boolean') ? secure : false;
         
         /** @private {string} cookieSamesite */
-        this.cookieSamesite = (typeof sameSite !== 'string' || sameSite === '') ? 'Lax' : sameSite;
+        this.cookieSamesite = (typeof sameSite === 'string' && sameSite !== '') ? sameSite : 'Lax';
 
-        /** @private {mixed} data */
-        this.data = this.fetchCookie();
+        /** @private {Object} data */
+        this.data = this.getCookies();
 
         /** @private {boolean} _isEnabled - Stores isEnabled result */
         this._isEnabled = null;
     }
     
     /**
-     * Get the cookie value (either a string, array or null)
+     * Get the cookie value (returns undefined if cookie name does not exist)
+     * @param {string} name Cookie name
      * @returns {mixed}
      */
-     getCookie() {
-        return this.data;
+    getCookie(name) {
+        const cookieName = this.cookiePrefix + name;
+        if (cookieName in this.data) {
+            return this.data[cookieName];
+        }
+        return; // undefined
     }
 
     /**
      * Set/update the cookie value
-     * @param {mixed} value 
-     * @param {Date|string} expires Cookie expiration, either a Date object or a token string
+     * 
+     * Expiration date can either be token string or a Date object.
+     * @see {@link calcExpiresDate} for token string format.
+     * 
+     * @param {string} name Name of cookie to set/update (will create cookie if it does not exist)
+     * @param {mixed} value Value to store in cookie (any JSON serialisable string)
+     * @param {Date|string} expires Cookie expiration date (defaults to 1 year)
      */
-     setCookie(value, expires = '') {
-        let cookieText = encodeURIComponent(this.cookieName) + '=' + encodeURIComponent(value);
-        
-        cookieText += '; expires=';
-        if (expires instanceof Date) {
-            cookieText += expires.toGMTString();
-        } else {
-            if (expires === '') expires = '1y'; // 1 year default
-            cookieText += LmdCookie.calcExpiresDate(expires);
+     setCookie(name, value, expires = '') {
+        try {
+            let cookieText = encodeURIComponent(this.cookiePrefix + name) + '=';
+
+            cookieText += encodeURIComponent(JSON.stringify(value));
+
+            cookieText += '; expires=';
+            if (expires instanceof Date) {
+                cookieText += expires.toGMTString();
+            } else {
+                if (expires === '') expires = '1y'; // 1 year default
+                cookieText += LmdCookie.calcExpiresDate(expires);
+            }
+            
+            if (this.cookiePath) cookieText += '; path=' + this.cookiePath;
+            if (this.cookieDomain) cookieText += '; domain=' + this.cookieDomain;
+            if (this.cookieSecure) cookieText += '; secure';
+            cookieText += '; SameSite=' + this.cookieSamesite;
+            
+            document.cookie = cookieText;
+        } catch (e) {
+            console.error(`LmdCookie: could not create/update '${name}'.\n${e.message}`);
         }
-        
-        if (this.cookiePath) cookieText += '; path=' + this.cookiePath;
-        if (this.cookieDomain) cookieText += '; domain=' + this.cookieDomain;
-        if (this.cookieSecure) cookieText += '; secure';
-        cookieText += '; SameSite=' + this.cookieSamesite;
-        
-        document.cookie = cookieText;
     }
     
     /**
-     * Remove the cookie
+     * Remove a cookie
+     * 
+     * @param {string} name Name of cookie to remove
      */
-    removeCookie() {
-        this.setCookie('', new Date(0));
+    removeCookie(name) {
+        this.setCookie(name, '', new Date(0));
     }
     
     /**
-     * Fetch the cookie by name
-     * @returns {mixed}
+     * Get all accessible cookies
+     * @returns {Object}
      */
-     fetchCookie() {
-        const cookies = document.cookie.split(/\s*;\s*/);
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].split('=');
-            const key = decodeURIComponent(cookie[0]);
-            const val = decodeURIComponent(cookie[1]);
-            if (key === this.cookieName) {
-                if (val.indexOf('|') >= 0) return val.split('|'); // array
-                return val; // string
+     getCookies() {
+        const cookies = document.cookie.split(/\s*;\s*/).filter(element => element);
+        let cookieJar = Object.create(null);
+        if (Array.isArray(cookies) && cookies.length > 0) {
+            for (const cookie of cookies) {
+                const [key, val] = cookie.split('=').map((item) => decodeURIComponent(item));
+                try {
+                    cookieJar[key] = JSON.parse(val);
+                } catch (e) {
+                    console.error(`LmdCookie: could not get value of '${key}'.\n${e.message}`);
+                    cookieJar[key] = null;
+                }
             }
         }
-        return null; // doesn't exist
+        return cookieJar;
     }
 
     /**

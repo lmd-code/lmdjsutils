@@ -21,50 +21,56 @@ Include the script in the `<head>` of your HTML document. Javascript classes mus
 <script src="path/to/your-script.js"></script>
 ```
 
-### Initialise: `new LmdCookie(name, path, domain, secure, sameSite)`
+### Initialise: `new LmdCookie(prefix, path, domain, secure, sameSite)`
 
-Initialise a cookie with its parameters, only the first parameter (`name`) is required.
+Initialise the cookie class with optional parameters.
 
-- `name` - Name (key) of browser cookie (*required*).
-- `path` -  Absolute path for cookie visibility (*optional, defaults to current path*)
-- `domain` - Cookie domain (*optional, defaults to current domain only*)
-- `secure` - Only send over https (*optional, defaults to `false`*).
-- `sameSite` - same-origin/cross-site policy: 'lax', 'strict' or 'none' (*optional, defaults to 'lax'*).
+- `prefix` - Prefix for cookie names - any cookie without prefix will be ignored (*defaulta to no prefix/empty string*).
+- `path` -  Absolute path for cookie visibility (*defaults to current path*)
+- `domain` - Cookie domain (*defaults to current domain only*)
+- `secure` - Only send over https (*defaults to `false`*).
+- `sameSite` - Same-origin/cross-site policy: 'lax', 'strict' or 'none' (*defaults to 'Lax'*).
+
+If a prefix is provided, you do not need to use it when setting/getting/removing cookies, it is automatically added.
 
 ```javascript
-$myCookie = new LmdCookie('foo'); // Basic
+// Basic - defaults only
+$myCookie = new LmdCookie();
 
-$myCookie = new LmdCookie('foo', '/', null, true); // Accessible from any path from root directory, HTTPS only
+// Names prefixed by 'foo', accessible from any path from root directory, HTTPS only
+$myCookie = new LmdCookie('foo', '/', null, true);
 
-$myCookie = new LmdCookie('foo', null, null, false, 'none'); // allow cross-site cookie
+// Allow cross-site cookie
+$myCookie = new LmdCookie('', null, null, false, 'none');
 ```
 
 ### Methods
 
-#### `setCookie(value, expires)`
+#### `setCookie(name, value, expires)`
 
 Set cookie data with expiration (default: 1 year).
 
-- `value` - Cookie value can be a `string`, `integer` or simple `array` (*required*).
-- `expires` - Cookie expiration date can be a date token string (see [Token Format](#token-format) below) or a `Date` object (*optional, defaults to 1 year*). 
+- `name` - Name of the cookie to set/update, it will create the cookie if it does not exist (*required*)
+- `value` - Cookie value can be any value that can be serialised into a JSON string (*required*).
+- `expires` - Cookie expiration date can be a date token string (see [Token Format](#token-format) below) or a `Date` object (*optional, defaults to 1 year*).
 
 ```javascript
 // Expire in 1 year (default)
-$myCookie.set('Hello World');
-
-// Expire on specified date/time
-$myCookie.set('Hello World', new Date('2025-06-20 11:00:00'));
+$myCookie.set('greeting', 'Hello World');
 
 // Expire after elapsed time
-$myCookie.set('Hello World', '1y 6m'); // 1 year, 6 months
+$myCookie.set('greeting', 'Hello World', '1y 6m'); // 1 year, 6 months
+
+// Expire on specified date/time
+$myCookie.set('greeting', 'Hello World', new Date('2025-06-20 11:00:00'));
 ```
 
 ##### Token Format
 
 The date token string format is a *case-insensitive* sequence of digit/letter pairs, with each pair separated by a space.
 
-For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours 
- 
+For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours.
+
 | Token | Timespan | Example |
 | :---: | :------- | :------ |
 | `Y` | Year | `2y` = 2 years |
@@ -75,24 +81,28 @@ For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours
 | `S` | Seconds | `20s` = 20 seconds |
 | `W` | Weeks | `2w` = 2 weeks |
 
-#### `getCookie()`
+#### `getCookie(name)`
 
 Get cookie data - returns either a string or an array, or null if the cookie name doesn't exist.
 
+- `name` - Name of the cookie to get (*required*). Will return `undefined` if the cookie does not exist.
+
 ```javascript
-let foo = $myCookie.getCookie();
-console.log(foo); // returns 'Hello World'
+const greet = $myCookie.getCookie('greeting');
+console.log(greet); // returns 'Hello World'
 ```
 
 **Note** It is important to remember that once a cookie has been created/set/updated, you can't retrieve its value until after a document refresh/reload.
 
-#### `removeCookie()`
+#### `removeCookie(name)`
 
 Remove/delete cookie from browser.
 
+- `name` - Name of the cookie to remove/delete (*required*).
+
 ```javascript
-$myCookie.removeCookie();
+$myCookie.removeCookie('greeting');
 
 // After page refresh
-console.log($myCookie.getCookie()); // returns null
+console.log($myCookie.getCookie('greeting')); // returns undefined
 ```
