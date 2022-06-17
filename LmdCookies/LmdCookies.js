@@ -28,7 +28,7 @@ class LmdCookies {
      */
     constructor(prefix = '', path = null, domain = null, secure = false, sameSite = 'Lax') {
         /** @private {string} cookiePrefix */
-        this.cookiePrefix = (typeof sameSite === 'string' && sameSite !== '') ? prefix + '_' : '';
+        this.cookiePrefix = (typeof prefix === 'string' && prefix !== '') ? prefix + '_' : '';
         
         /** @private {string|null} cookiePath */
         this.cookiePath = path;
@@ -42,26 +42,29 @@ class LmdCookies {
         /** @private {string} cookieSamesite */
         this.cookieSamesite = (typeof sameSite === 'string' && sameSite !== '') ? sameSite : 'Lax';
 
-        /** @private {Object} data - All accessible cookies */
-        this.data = this.getCookies();
-
         /** @private {boolean} _isEnabled - Stores isEnabled result */
         this._isEnabled = null;
-        
+
         /** @private {RegExp} prefixRegex - Regular expression to match prefixed names */
         this.prefixRegex = new RegExp('^' + this.cookiePrefix);
+
+        /** @private {Object} data - All accessible cookies */
+        this.data = this.getCookies();
     }
     
+    /**
+     * Detect if cookies are available/enabled in user's browser
+     * @property {boolean} isEnabled
+     */
     get isEnabled() {
         if (this._isEnabled === undefined || this._isEnabled === null) {
             const testKey = '_lmdcookies_test';
-            const testValue = 'LmdCookiesTest';
             try {
                 if (navigator.cookieEnabled) {
-                    document.cookie = testKey + '=' + testValue;
+                    document.cookie = testKey + '=LmdCookiesTest;Max-Age=60;SameSite=Strict';
                     if (document.cookie.indexOf(testKey) != -1) {
                         this._isEnabled = true;
-                        document.cookie = testKey + '=;Max-Age=-1';
+                        document.cookie = testKey + '=;Max-Age=-1;SameSite=Strict';
                     } else {
                         this._isEnabled = false;
                     }
@@ -118,6 +121,8 @@ class LmdCookies {
             cookieText += '; SameSite=' + this.cookieSamesite;
             
             document.cookie = cookieText;
+
+            this.data = this.getCookies(); // refresh
         } catch (e) {
             console.error(`${this.constructor.name}: could not create/update '${name}'.\n${e.message}`);
         }
@@ -142,8 +147,8 @@ class LmdCookies {
         if (Array.isArray(cookies) && cookies.length > 0) {
             for (const cookie of cookies) {
                 const [key, val] = cookie.split('=').map((item) => decodeURIComponent(item));
-                
-                if (prefixIsSet() && !this.prefixRegex.test(key)) {
+
+                if (this.prefixIsSet() && !this.prefixRegex.test(key)) {
                     continue; // skip cookie if it doesn't have a prefix
                 }
                 

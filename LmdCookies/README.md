@@ -32,7 +32,7 @@ In your script, initialise the cookie class with optional parameters.
 new LmdCookies(prefix, path, domain, secure, sameSite)
 ```
 
-- `prefix` - Prefix for cookie names - any cookie without prefix will be ignored (*defaulta to no prefix/empty string*).
+- `prefix` - Prefix for cookie names, when used any cookie without prefix will be ignored (*defaults to no prefix/empty string*).
 - `path` -  Absolute path for cookie visibility (*defaults to current path*)
 - `domain` - Cookie domain (*defaults to current domain only*)
 - `secure` - Only send over https (*defaults to `false`*).
@@ -71,8 +71,6 @@ $myCookies.set('greeting', 'Hello World', '1y 6m'); // 1 year, 6 months
 // Expire on specified date/time
 $myCookies.set('greeting', 'Hello World', new Date('2025-06-20 11:00:00'));
 ```
-
-**Note:** It is important to remember that once a cookie has been created/set/updated, you can not *retrieve* its value until after a document refresh/reload.
 
 #### Token Format
 
