@@ -1,4 +1,4 @@
-# LmdCookie
+# LmdCookies
 
 ---
 
@@ -7,6 +7,11 @@
 ---
 
 Lightweight wrapper for browser cookies.
+
+## General Cookie Notes
+
+- Cookies can only store small amounts of data (max. 4 kb) and are best used with one cookie per value (or a simple array of values at most).
+- If you find you need more store larger quantities of data or complex data types, then `localStorage` is a better option (see [LmdStorage](../LmdStorage/README.md)).
 
 ## Minimum Requirements
 
@@ -17,13 +22,15 @@ Lightweight wrapper for browser cookies.
 Include the script in the `<head>` of your HTML document. Javascript classes must be defined (inserted) before they are used.
 
 ```html
-<script src="path/to/LmdCookie.min.js"></script>
+<script src="path/to/LmdCookies.min.js"></script>
 <script src="path/to/your-script.js"></script>
 ```
 
-### Initialise: `new LmdCookie(prefix, path, domain, secure, sameSite)`
+In your script, initialise the cookie class with optional parameters.
 
-Initialise the cookie class with optional parameters.
+```javascript
+new LmdCookies(prefix, path, domain, secure, sameSite)
+```
 
 - `prefix` - Prefix for cookie names - any cookie without prefix will be ignored (*defaulta to no prefix/empty string*).
 - `path` -  Absolute path for cookie visibility (*defaults to current path*)
@@ -35,18 +42,18 @@ If a prefix is provided, you do not need to use it when setting/getting/removing
 
 ```javascript
 // Basic - defaults only
-$myCookie = new LmdCookie();
+$myCookies = new LmdCookies();
 
 // Names prefixed by 'foo', accessible from any path from root directory, HTTPS only
-$myCookie = new LmdCookie('foo', '/', null, true);
+$myCookies = new LmdCookies('foo', '/', null, true);
 
 // Allow cross-site cookie
-$myCookie = new LmdCookie('', null, null, false, 'none');
+$myCookies = new LmdCookies('', null, null, false, 'none');
 ```
 
-### Methods
+## Methods
 
-#### `setCookie(name, value, expires)`
+### `set(name, value, expires)`
 
 Set cookie data with expiration (default: 1 year).
 
@@ -56,16 +63,18 @@ Set cookie data with expiration (default: 1 year).
 
 ```javascript
 // Expire in 1 year (default)
-$myCookie.set('greeting', 'Hello World');
+$myCookies.set('greeting', 'Hello World');
 
 // Expire after elapsed time
-$myCookie.set('greeting', 'Hello World', '1y 6m'); // 1 year, 6 months
+$myCookies.set('greeting', 'Hello World', '1y 6m'); // 1 year, 6 months
 
 // Expire on specified date/time
-$myCookie.set('greeting', 'Hello World', new Date('2025-06-20 11:00:00'));
+$myCookies.set('greeting', 'Hello World', new Date('2025-06-20 11:00:00'));
 ```
 
-##### Token Format
+**Note:** It is important to remember that once a cookie has been created/set/updated, you can not *retrieve* its value until after a document refresh/reload.
+
+#### Token Format
 
 The date token string format is a *case-insensitive* sequence of digit/letter pairs, with each pair separated by a space.
 
@@ -81,28 +90,26 @@ For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours.
 | `S` | Seconds | `20s` = 20 seconds |
 | `W` | Weeks | `2w` = 2 weeks |
 
-#### `getCookie(name)`
+### `get(name)`
 
 Get cookie data - returns either a string or an array, or null if the cookie name doesn't exist.
 
 - `name` - Name of the cookie to get (*required*). Will return `undefined` if the cookie does not exist.
 
 ```javascript
-const greet = $myCookie.getCookie('greeting');
+const greet = $myCookies.get('greeting');
 console.log(greet); // returns 'Hello World'
 ```
 
-**Note** It is important to remember that once a cookie has been created/set/updated, you can't retrieve its value until after a document refresh/reload.
-
-#### `removeCookie(name)`
+### `remove(name)`
 
 Remove/delete cookie from browser.
 
 - `name` - Name of the cookie to remove/delete (*required*).
 
 ```javascript
-$myCookie.removeCookie('greeting');
+$myCookies.remove('greeting');
 
 // After page refresh
-console.log($myCookie.getCookie('greeting')); // returns undefined
+console.log($myCookies.get('greeting')); // returns undefined
 ```

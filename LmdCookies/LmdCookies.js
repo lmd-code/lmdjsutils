@@ -1,8 +1,8 @@
 /**
- * LmdStorage - a lightweight browser cookie wrapper
+ * LmdCookies - a lightweight browser cookie wrapper
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
- * @version 0.2.0 - alpha
+ * @version 0.3.0 - alpha
  * @license GPLv3 
  */
 
@@ -16,9 +16,9 @@
  * @todo Override global cookie settings (path/domain/secure etc) on a per-cookie basis.
  * @todo Session cookies?
  */
-class LmdCookie {
+class LmdCookies {
     /**
-     * Initialise a cookie
+     * Initialise cookies
      * @param {string} prefix - Prefix for cookie names (will ignore any cookie not set with prefix)
      * @param {string|null} path - path for cookie (default: null)
      * @param {string|null} domain - cookie domain (default: null)
@@ -42,11 +42,38 @@ class LmdCookie {
         /** @private {string} cookieSamesite */
         this.cookieSamesite = (typeof sameSite === 'string' && sameSite !== '') ? sameSite : 'Lax';
 
-        /** @private {Object} data */
+        /** @private {Object} data - All accessible cookies */
         this.data = this.getCookies();
 
         /** @private {boolean} _isEnabled - Stores isEnabled result */
         this._isEnabled = null;
+        
+        /** @private {RegExp} prefixRegex - Regular expression to match prefixed names */
+        this.prefixRegex = new RegExp('^' + this.cookiePrefix);
+    }
+    
+    get isEnabled() {
+        if (this._isEnabled === undefined || this._isEnabled === null) {
+            const testKey = '_lmdcookies_test';
+            const testValue = 'LmdCookiesTest';
+            try {
+                if (navigator.cookieEnabled) {
+                    document.cookie = testKey + '=' + testValue;
+                    if (document.cookie.indexOf(testKey) != -1) {
+                        this._isEnabled = true;
+                        document.cookie = testKey + '=;Max-Age=-1';
+                    } else {
+                        this._isEnabled = false;
+                    }
+                } else {
+                    this._isEnabled = false;
+                }
+            } catch (e) {
+                this._isEnabled = false;
+            }
+        }
+        
+        return this._isEnabled;
     }
     
     /**
@@ -54,7 +81,7 @@ class LmdCookie {
      * @param {string} name Cookie name
      * @returns {mixed}
      */
-    getCookie(name) {
+    get(name) {
         const cookieName = this.cookiePrefix + name;
         if (cookieName in this.data) {
             return this.data[cookieName];
@@ -72,7 +99,7 @@ class LmdCookie {
      * @param {mixed} value Value to store in cookie (any JSON serialisable string)
      * @param {Date|string} expires Cookie expiration date (defaults to 1 year)
      */
-     setCookie(name, value, expires = '') {
+     set(name, value, expires = '') {
         try {
             let cookieText = encodeURIComponent(this.cookiePrefix + name) + '=';
 
@@ -82,8 +109,7 @@ class LmdCookie {
             if (expires instanceof Date) {
                 cookieText += expires.toGMTString();
             } else {
-                if (expires === '') expires = '1y'; // 1 year default
-                cookieText += LmdCookie.calcExpiresDate(expires);
+                cookieText += LmdCookies.calcExpiresDate(expires);
             }
             
             if (this.cookiePath) cookieText += '; path=' + this.cookiePath;
@@ -93,7 +119,7 @@ class LmdCookie {
             
             document.cookie = cookieText;
         } catch (e) {
-            console.error(`LmdCookie: could not create/update '${name}'.\n${e.message}`);
+            console.error(`${this.constructor.name}: could not create/update '${name}'.\n${e.message}`);
         }
     }
     
@@ -102,7 +128,7 @@ class LmdCookie {
      * 
      * @param {string} name Name of cookie to remove
      */
-    removeCookie(name) {
+    remove(name) {
         this.setCookie(name, '', new Date(0));
     }
     
@@ -111,20 +137,33 @@ class LmdCookie {
      * @returns {Object}
      */
      getCookies() {
-        const cookies = document.cookie.split(/\s*;\s*/).filter(element => element);
+        const cookies = document.cookie.split(/\s*;\s*/).filter(item => item);
         let cookieJar = Object.create(null);
         if (Array.isArray(cookies) && cookies.length > 0) {
             for (const cookie of cookies) {
                 const [key, val] = cookie.split('=').map((item) => decodeURIComponent(item));
+                
+                if (prefixIsSet() && !this.prefixRegex.test(key)) {
+                    continue; // skip cookie if it doesn't have a prefix
+                }
+                
                 try {
                     cookieJar[key] = JSON.parse(val);
                 } catch (e) {
-                    console.error(`LmdCookie: could not get value of '${key}'.\n${e.message}`);
+                    console.error(`${this.constructor.name}: could not get value of '${key}'.\n${e.message}`);
                     cookieJar[key] = null;
                 }
             }
         }
         return cookieJar;
+    }
+    
+    /**
+     * Is the cookie prefix set?
+     * @returns boolean
+     */
+    prefixIsSet() {
+        return this.cookiePrefix !== '';
     }
 
     /**
@@ -151,40 +190,45 @@ class LmdCookie {
     static calcExpiresDate(expires) {
         const now = new Date();
 
-        const tokens = expires.split(' ');
+        const tokens = expires.split(/\s+/).filter(val => val);
 
-        for (let i = 0; i < tokens.length; i++) {
-            let [match, num, tok] = tokens[i].match(/(\d+)(\w+)/i);
-
-            tok = tok.toUpperCase();
-            num = parseInt(num);
-
-            switch (tok) {
-                case 'Y':
-                    now.setUTCFullYear(now.getUTCFullYear() + num);
-                    break;
-                case 'M':
-                    now.setUTCMonth(now.getUTCMonth() + num);
-                    break;
-                case 'D':
-                    now.setUTCDate(now.getUTCDate() + num);
-                    break;
-                case 'H':
-                    now.setUTCHours(now.getUTCHours() + num);
-                    break;
-                case 'MI':
-                    now.setUTCMinutes(now.getUTCMinutes() + num);
-                    break;
-                case 'S':
-                    now.setUTCSeconds(now.getUTCSeconds() + num);
-                    break;
-                case 'W':
-                    now.setUTCDate(now.getUTCDate() + (num * 7)); // 1 week = 7 days
-                    break;
-                default:
-                    break;
+        if (Array.isArray(tokens) && tokens.length > 0) {
+            for (let i = 0; i < tokens.length; i++) {
+                let [match, num, tok] = tokens[i].match(/(\d+)(\w+)/i);
+    
+                tok = tok.toUpperCase();
+                num = parseInt(num);
+    
+                switch (tok) {
+                    case 'Y':
+                        now.setUTCFullYear(now.getUTCFullYear() + num);
+                        break;
+                    case 'M':
+                        now.setUTCMonth(now.getUTCMonth() + num);
+                        break;
+                    case 'D':
+                        now.setUTCDate(now.getUTCDate() + num);
+                        break;
+                    case 'H':
+                        now.setUTCHours(now.getUTCHours() + num);
+                        break;
+                    case 'MI':
+                        now.setUTCMinutes(now.getUTCMinutes() + num);
+                        break;
+                    case 'S':
+                        now.setUTCSeconds(now.getUTCSeconds() + num);
+                        break;
+                    case 'W':
+                        now.setUTCDate(now.getUTCDate() + (num * 7)); // 1 week = 7 days
+                        break;
+                    default:
+                        break;
+                }
             }
+        } else {
+            now.setUTCFullYear(now.getUTCFullYear() + 1); // 1 year default
         }
+        
         return  now.toGMTString();
     }
 }
