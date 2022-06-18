@@ -8,12 +8,6 @@
 
 Lightweight wrapper for browser cookies.
 
-## General Cookie Notes
-
-- You can only have a total of ~20 cookies per domain (depending on the browser), storing up to a maximum of 4 kb of data each. They are best used with simple data.
-    - If you find you need to store larger quantities of data or complex data types, then `localStorage` is a better option (see [LmdStorage](../LmdStorage/README.md)).
-- Where `SameSite` is set to `none` (cross-site access allowed), `secure` must be set to `true` (access over 'HTTPS' only), or it may be rejected by modern browsers (this library will set this automatically). If the domain serving the cookie does not have HTTPS, then you can not specify `none` for `SameSite`.
-
 ## Minimum Requirements
 
 - ECMAScript 6 (ES6, aka ECMAScript 2015) capable browsers.
@@ -47,11 +41,11 @@ If a prefix is provided, you do not need to use it when setting/getting/removing
 // Basic - defaults only
 $myCookies = new LmdCookies();
 
-// Names prefixed by 'foo', accessible from any path from root directory, HTTPS only
-$myCookies = new LmdCookies('foo', '/', null, true);
+// Names prefixed by 'foo', accessible from any path from root directory, from any sub-domain
+$myCookies = new LmdCookies('foo', '/', 'example.com');
 
-// Allow cross-site cookie
-$myCookies = new LmdCookies(null, null, null, false, 'none');
+// Allow secure (HTTPS) cross-site cookie
+$myCookies = new LmdCookies(null, null, null, true, 'none');
 ```
 
 ## Properties
@@ -153,3 +147,9 @@ $myCookies.remove('greeting');
 // After page refresh
 console.log($myCookies.get('greeting')); // returns undefined
 ```
+
+## General Cookie Notes
+
+- You can only have a total of ~20 cookies per domain (depending on the browser), storing up to a maximum of 4 kb of data each. They are best used with simple data.
+    - If you find you need to store larger quantities of data or complex data types, *and you don't need to share data across subdomains*, then `localStorage` is a better option (see [LmdStorage](../LmdStorage/README.md)).
+- Where `SameSite` is set to `none` (cross-site access allowed), `secure` must be set to `true` (access over 'HTTPS' only), or it may be rejected by modern browsers (this library will set this automatically). If the domain serving the cookie does not have HTTPS, then you can not specify `none` for `SameSite`.

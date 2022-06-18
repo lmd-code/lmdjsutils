@@ -7,7 +7,7 @@
 
 ---
 
-Lightweight wrapper for browser storage (`localStorage`/`sessionStorage`). Use a single storage item to store multiple values in key/value pairs.
+Lightweight wrapper for local storage (`localStorage`/`sessionStorage`). Use a single local storage item to store multiple values in key/value pairs.
 
 Data is represented as a `Map` object which is serialised and stored as a JSON string. This allows stored values to be any valid JSON data type instead of just strings. You can even store other `Map` objects, they are serialised and restored safely, the only requirement is that item keys must always be a string to be valid JSON.
 
@@ -24,12 +24,19 @@ Include the script in the `<head>` of your HTML document. Javascript classes mus
 <script src="path/to/your-script.js"></script>
 ```
 
-### Initialise: `new LmdStorage(storeName, storeType, mapKey)`
+Then in your script, initialise the LmdStorage class with the name of your store and the type of storage to use ('local' or 'session').
 
-Initialise with the name of your store and the type of browser storage to use ('local' or 'session').
+```javascript
+new LmdStorage(storeName, storeType, mapKey)
+```
 
-- The 'local' (`localStorage`) option is the default, so can be omitted.
-- If the storage item doesn't exist yet, it will be created when an item is added.
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| `storeName` | string | |
+| `storeType` | string | Optional. 'local' (default) for `localStorage`, 'session' for `sessionStorage`.|
+| `mapKey` | string | Optional. Token to identify `Map` objects. Only needed to use it under *certain circumstances*. Serialised `Map` objects are indicated by the key '_map' -- if you think that this will clash with a key name in your own data, then you can change it to something else via this parameter. |
+
+If the storage item doesn't exist yet, it will be created when an item is added.
 
 ```javascript
 // localStorage (you can omit the 'local' param)
@@ -41,18 +48,14 @@ const $myStorage = new LmdStorage('mystore', 'session');
 // You can have multiple stores, each one is a separate browser storage entry, e.g.,:
 const $userPrefs = new LmdStorage('userPrefs'); // user's website preferences
 const $formData = new LmdStorage('formData'); // unfinished form data/blog posts/comments etc
-```
 
-**Note:** The third parameter ('mapKey') is optional and you only need to use it under *certain circumstances*. Serialised `Map` objects are indicated by the key '_map' -- if you think that this will clash with a key name in your own data, then you can change it to something else via this parameter.
-
-```javascript
-// The second parameter ('local' or 'session') is now required
+// When setting a different mapKey, the second parameter ('local' or 'session') is now required
 const $myStorage = new LmdStorage('mystore', 'local', '_mymapkey');
 ```
 
-### Properties
+## Properties
 
-#### `isEnabled`
+### `isEnabled`
 
 Save yourself a headache and check if browser storage is available before you use it.
 
@@ -60,7 +63,7 @@ Save yourself a headache and check if browser storage is available before you us
 const storageAvailable = $myStorage.isEnabled; // returns boolean true/false
 ```
 
-#### `count`
+### `count`
 
 Get number of items in your storage item.
 
@@ -69,9 +72,9 @@ Get number of items in your storage item.
 let numItems = $myStorage.count; // returns number
 ```
 
-### Methods
+## Methods
 
-#### `setItem(key, value, noSave) / setItems({key1: value1, key2: value2}, noSave)`
+### `setItem(key, value, noSave) / setItems({key1: value1, key2: value2}, noSave)`
 
 Set a single item by key/value or multiple values as an object, optionally with a `noSave` flag.
 
@@ -87,7 +90,7 @@ $myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}); // save immediate
 $myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}, true); // with noSave flag
 ```
 
-#### `getItem(key)`
+### `getItem(key)`
 
 Get a single item value by key (returns 'undefined' if the key doesn't exist).
 
@@ -99,7 +102,7 @@ let baz = $myStorage.getItem('baz'); // returns number '42'
 let hey = $myStorage.getItem('hey'); // return undefined
 ```
 
-#### `getItems()`
+### `getItems()`
 
 The `getItems()` method returns a copy of the internal data `Map` object. You can therefore do everything you can with `Map` objects.
 
@@ -114,7 +117,7 @@ See [`getItems()` example code](#example-using-the-getitems-method) below.
 let allPrefs = $myStorage.getItems();
 ```
 
-#### `removeItem(key, noSave) / removeItems(['key1', 'key2'], noSave)`
+### `removeItem(key, noSave) / removeItems(['key1', 'key2'], noSave)`
 
 Remove a single item by key or multple items by an array of keys, optionally with a `noSave` flag (see [setItem()/setItems()](#removeitemkey-nosave--removeitemskey1-key2-nosave)).
 
@@ -128,7 +131,7 @@ $myStorage.removeItems(['bar', 'baz']);
 $myStorage.removeItems(['bar', 'baz'], true); // with noSave flag
 ```
 
-#### `saveAll(mapObject)`
+### `saveAll(mapObject)`
 
 Save all items - overwrites stored data with current state. Useful for when you make several changes using the `noSave` flag and want to save just once.
 
@@ -139,7 +142,7 @@ $myStorage.saveAll(); // Current data
 $myStorage.saveAll(mapObject); // Pass a new Map object (replaces original data)
 ```
 
-#### `clearAll()`
+### `clearAll()`
 
 Remove entire store - clears internal data and deletes from browser storage.
 
@@ -147,7 +150,7 @@ Remove entire store - clears internal data and deletes from browser storage.
 $myStorage.clearAll();
 ```
 
-### Example using the `getItems()` method
+## Example using the `getItems()` method
 
 The `getItems()` method returns a copy of the internal data `Map` object.
 
@@ -203,3 +206,11 @@ console.log($myStorage.getItem('greet')); // 'Hello'
 console.log($myStorage.getItem('where')); // 'Moon'
 console.log($myStorage.getItem('status')); // undefined
 ```
+
+## General Local Storage Notes
+
+You probably know this, but just in case:
+
+- Unlike cookies, local storage is only accessible within its own domain/sub-domain.  In other words, it is strictly scoped to the same-origin. The domains `example.com`, `www.example.com`, `foo.example.com`, as well as `https://example.com` (encryption enabled) and `http://example.com` do not have access to each other's local storage.
+- Likewise, local storage is not accessible cross-site either -- `test.com` can not access local storage from `example.com`.
+- However, a third-party script running within your site could still access your domain's local storage, so *do **not** use it to store sensitive data*.
