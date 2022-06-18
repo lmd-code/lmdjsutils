@@ -2,7 +2,7 @@
  * LmdCookies - a lightweight browser cookie wrapper
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
- * @version 0.3.0 - alpha
+ * @version 1.0.0 - alpha
  * @license GPLv3 
  */
 
@@ -11,42 +11,40 @@
 /**
  * Wrapper class for interacting with browser cookies
  * @class
- * 
- * @todo Determine if cookies are enabled/available in browser and provide warning if not.
- * @todo Override global cookie settings (path/domain/secure etc) on a per-cookie basis.
- * @todo Session cookies?
  */
 class LmdCookies {
     /**
      * Initialise cookies
-     * @param {string} prefix - Prefix for cookie names (will ignore any cookie not set with prefix)
-     * @param {string|null} path - path for cookie (default: null)
-     * @param {string|null} domain - cookie domain (default: null)
+     * @param {string|null} prefix - Prefix for cookie names (leave blank for no prefix)
+     * @param {string|null} path - path for cookie (default: null - uses curent path)
+     * @param {string|null} domain - cookie domain (default: null - uses current domain)
      * @param {boolean} secure - only send over https (default: false)
-     * @param {string} sameSite - same-origin/cross-site policy (default: 'Lax')
-     * expires
+     * @param {string} sameSite - same-origin/cross-site policy (default: 'lax')
      */
-    constructor(prefix = '', path = null, domain = null, secure = false, sameSite = 'Lax') {
+    constructor(prefix = null, path = null, domain = null, secure = false, sameSite = 'lax') {
         /** @private {string} cookiePrefix */
-        this.cookiePrefix = (typeof prefix === 'string' && prefix !== '') ? prefix + '_' : '';
+        this.cookiePrefix = (typeof prefix === 'string' && prefix !== '') ? encodeURIComponent(prefix) + '_' : '';
         
         /** @private {string|null} cookiePath */
-        this.cookiePath = path;
+        this.cookiePath = (typeof path === 'string' && path !== '') ? path : null;
         
         /** @private {string|null} cookieDomain */
-        this.cookieDomain = domain;
+        this.cookieDomain = (typeof domain === 'string' && domain !== '') ? domain : null;
         
         /** @private {boolean} cookieSecure */
         this.cookieSecure = (typeof secure === 'boolean') ? secure : false;
         
         /** @private {string} cookieSamesite */
-        this.cookieSamesite = (typeof sameSite === 'string' && sameSite !== '') ? sameSite : 'Lax';
+        this.cookieSamesite = (typeof sameSite === 'string' && sameSite !== '') ? sameSite : 'lax';
 
         /** @private {boolean} _isEnabled - Stores isEnabled result */
         this._isEnabled = null;
 
-        /** @private {RegExp} prefixRegex - Regular expression to match prefixed names */
-        this.prefixRegex = new RegExp('^' + this.cookiePrefix);
+        // If SameSite = 'none', then enforce secure = true
+        if (this.cookieSamesite === 'none') {
+            this.cookieSecure = true;
+            console.warn(`${this.constructor.name}: where 'SameSite' is set to 'none' (cross-site access allowed), 'secure' must be set to 'true' (access over 'HTTPS' only), or it may be rejected by modern browsers. If the domain serving the cookie does not have HTTPS, then you can not specify 'none' for 'SameSite'.`);
+        }
 
         /** @private {Object} data - All accessible cookies */
         this.data = this.getCookies();
@@ -59,24 +57,49 @@ class LmdCookies {
     get isEnabled() {
         if (this._isEnabled === undefined || this._isEnabled === null) {
             const testKey = '_lmdcookies_test';
-            try {
-                if (navigator.cookieEnabled) {
-                    document.cookie = testKey + '=LmdCookiesTest;Max-Age=60;SameSite=Strict';
-                    if (document.cookie.indexOf(testKey) != -1) {
-                        this._isEnabled = true;
-                        document.cookie = testKey + '=;Max-Age=-1;SameSite=Strict';
-                    } else {
-                        this._isEnabled = false;
-                    }
-                } else {
+
+            // Has a test cookie already been saved this session
+            if (document.cookie.indexOf(testKey) != -1) {
+                this._isEnabled = true;
+            } else {
+                try {
+                    // Check if cookies enabled by the browser
+                    if (!navigator.cookieEnabled) throw 'NO_COOKIE';
+
+                    // Even if if enabled, do they work - set a test session cookie
+                    document.cookie = testKey + '=LmdCookiesTest;SameSite=Strict';
+
+                    // Check if it got stored by the browser
+                    if (document.cookie.indexOf(testKey) == -1) throw 'NO_COOKIE';
+
+                    // We have cookies
+                    this._isEnabled = true;
+                } catch (e) {
                     this._isEnabled = false;
+                    console.warn(`${this.constructor.name}: Cookies are not available/enabled.`);
                 }
-            } catch (e) {
-                this._isEnabled = false;
             }
         }
         
         return this._isEnabled;
+    }
+
+    /**
+     * @property {number} count - Number of cookies retrieved (accounts for prefix)
+     */
+    get count() {
+        if (this.data === undefined || this.data === null) return 0;
+        return Object.keys(this.data).length;
+    }
+
+    /**
+     * Check whether a cookie name exists
+     * @param {string} name Cookie name
+     * @returns {boolean}
+     */
+    has(name) {
+        const cookieName = this.cookiePrefix + name;
+        return (cookieName in this.data);
     }
     
     /**
@@ -100,25 +123,22 @@ class LmdCookies {
      * 
      * @param {string} name Name of cookie to set/update (will create cookie if it does not exist)
      * @param {mixed} value Value to store in cookie (any JSON serialisable string)
-     * @param {Date|string} expires Cookie expiration date (defaults to 1 year)
+     * @param {Date|string} expires Cookie expiration date (defaults to 'session' cookie)
      */
-     set(name, value, expires = '') {
+     set(name, value, expires = 'session') {
         try {
-            let cookieText = encodeURIComponent(this.cookiePrefix + name) + '=';
+            let cookieText = this.cookiePrefix + encodeURIComponent(name) + '=';
 
             cookieText += encodeURIComponent(JSON.stringify(value));
 
-            cookieText += '; expires=';
-            if (expires instanceof Date) {
-                cookieText += expires.toGMTString();
-            } else {
-                cookieText += LmdCookies.calcExpiresDate(expires);
+            if (expires !== 'session') {
+                cookieText += '; expires=' + LmdCookies.calcExpiresDate(expires);
             }
             
             if (this.cookiePath) cookieText += '; path=' + this.cookiePath;
             if (this.cookieDomain) cookieText += '; domain=' + this.cookieDomain;
             if (this.cookieSecure) cookieText += '; secure';
-            cookieText += '; SameSite=' + this.cookieSamesite;
+            cookieText += '; samesite=' + this.cookieSamesite;
             
             document.cookie = cookieText;
 
@@ -129,12 +149,12 @@ class LmdCookies {
     }
     
     /**
-     * Remove a cookie
+     * Remove/delete a cookie
      * 
      * @param {string} name Name of cookie to remove
      */
     remove(name) {
-        this.setCookie(name, '', new Date(0));
+        this.set(name, '', new Date(0));
     }
     
     /**
@@ -146,11 +166,10 @@ class LmdCookies {
         let cookieJar = Object.create(null);
         if (Array.isArray(cookies) && cookies.length > 0) {
             for (const cookie of cookies) {
-                const [key, val] = cookie.split('=').map((item) => decodeURIComponent(item));
+                // If a prefix is set, skip cookie if it doesn't match
+                if (this.cookiePrefix !== '' && cookie.indexOf(this.cookiePrefix) !== 0) continue; 
 
-                if (this.prefixIsSet() && !this.prefixRegex.test(key)) {
-                    continue; // skip cookie if it doesn't have a prefix
-                }
+                const [key, val] = cookie.split('=').map((item) => decodeURIComponent(item));
                 
                 try {
                     cookieJar[key] = JSON.parse(val);
@@ -161,14 +180,6 @@ class LmdCookies {
             }
         }
         return cookieJar;
-    }
-    
-    /**
-     * Is the cookie prefix set?
-     * @returns boolean
-     */
-    prefixIsSet() {
-        return this.cookiePrefix !== '';
     }
 
     /**
@@ -193,6 +204,8 @@ class LmdCookies {
      * @returns string
      */
     static calcExpiresDate(expires) {
+        if (expires instanceof Date) return expires.toUTCString(); // already a Date object
+
         const now = new Date();
 
         const tokens = expires.split(/\s+/).filter(val => val);
@@ -234,6 +247,6 @@ class LmdCookies {
             now.setUTCFullYear(now.getUTCFullYear() + 1); // 1 year default
         }
         
-        return  now.toGMTString();
+        return  now.toUTCString();
     }
 }

@@ -10,8 +10,9 @@ Lightweight wrapper for browser cookies.
 
 ## General Cookie Notes
 
-- Cookies can only store small amounts of data (max. 4 kb) and are best used with one cookie per value (or a simple array of values at most).
-- If you find you need more store larger quantities of data or complex data types, then `localStorage` is a better option (see [LmdStorage](../LmdStorage/README.md)).
+- You can only have a total of ~20 cookies per domain (depending on the browser), storing up to a maximum of 4 kb of data each. They are best used with simple data.
+    - If you find you need to store larger quantities of data or complex data types, then `localStorage` is a better option (see [LmdStorage](../LmdStorage/README.md)).
+- Where `SameSite` is set to `none` (cross-site access allowed), `secure` must be set to `true` (access over 'HTTPS' only), or it may be rejected by modern browsers (this library will set this automatically). If the domain serving the cookie does not have HTTPS, then you can not specify `none` for `SameSite`.
 
 ## Minimum Requirements
 
@@ -32,11 +33,13 @@ In your script, initialise the cookie class with optional parameters.
 new LmdCookies(prefix, path, domain, secure, sameSite)
 ```
 
-- `prefix` - Prefix for cookie names, when used any cookie without prefix will be ignored (*defaults to no prefix/empty string*).
-- `path` -  Absolute path for cookie visibility (*defaults to current path*)
-- `domain` - Cookie domain (*defaults to current domain only*)
-- `secure` - Only send over https (*defaults to `false`*).
-- `sameSite` - Same-origin/cross-site policy: 'lax', 'strict' or 'none' (*defaults to 'Lax'*).
+| Param | Type | Description |
+| --- | --- | --- |
+| `prefix` | string/null | Prefix for cookie names. When specified, any cookie without the prefix will be ignored (*defaults to no prefix/empty string*). |
+| `path` |  string/null | Absolute path for cookie visibility (*defaults to current path*). |
+| `domain` | string/null | Cookie domain (*defaults to current domain*). |
+| `secure` | boolean | Only send over https (*defaults to `false`*). |
+| `sameSite` | string | Same-origin/cross-site policy: 'lax', 'strict' or 'none' (*defaults to 'lax'*). |
 
 If a prefix is provided, you do not need to use it when setting/getting/removing cookies, it is automatically added.
 
@@ -48,21 +51,42 @@ $myCookies = new LmdCookies();
 $myCookies = new LmdCookies('foo', '/', null, true);
 
 // Allow cross-site cookie
-$myCookies = new LmdCookies('', null, null, false, 'none');
+$myCookies = new LmdCookies(null, null, null, false, 'none');
+```
+
+## Properties
+
+### `isEnabled`
+
+Save yourself a headache and check if browser cookies are available before you use them.
+
+```javascript
+const cookiesAvailable = $myCookies.isEnabled; // returns boolean true/false
+```
+
+### `count`
+
+Get number of cookies retrieved. **Note:** if using a prefix, it will only count cookies using that prefix.
+
+```javascript
+
+let numItems = $myCookies.count; // returns number
 ```
 
 ## Methods
 
 ### `set(name, value, expires)`
 
-Set cookie data with expiration (default: 1 year).
+Set cookie data with optional expiration date (the default creates a 'session' cookie).
 
-- `name` - Name of the cookie to set/update, it will create the cookie if it does not exist (*required*)
-- `value` - Cookie value can be any value that can be serialised into a JSON string (*required*).
-- `expires` - Cookie expiration date can be a date token string (see [Token Format](#token-format) below) or a `Date` object (*optional, defaults to 1 year*).
+| Param | Type | Description |
+| --- | --- | --- |
+| `name` | string | Name of the cookie to set/update, it will create the cookie if it does not exist (*required*). |
+| `value` | mixed | Cookie value can be any value that can be serialised into a JSON string (*required*). |
+| `expires` | string|Date | Cookie expiration date can be a date token string (see [Token Format](#token-format) below) or a `Date` object (*optional, defaults to 'session' cookie*). |
 
 ```javascript
-// Expire in 1 year (default)
+// Expire at the end of the session (default)
 $myCookies.set('greeting', 'Hello World');
 
 // Expire after elapsed time
@@ -84,15 +108,31 @@ For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours.
 | `M` | Month | `3m` = 3 months |
 | `D` | Days | `5d` = 5 days |
 | `H` | Hours | `6h` = 6 hours |
-| `Mi` | Minutes | `30mi` = 30 minutes (note the two-letter code)|
+| `Mi` | Minutes | `30mi` = 30 minutes (note the two-letter code) |
 | `S` | Seconds | `20s` = 20 seconds |
 | `W` | Weeks | `2w` = 2 weeks |
+
+### `has(name)`
+
+Check whether a cookie exists.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| `name` | string | Name of the cookie to check (*required*). |
+
+```javascript
+console.log($myCookies.has('greeting')); // returns true
+
+console.log($myCookies.has('nope')); // returns false
+```
 
 ### `get(name)`
 
 Get cookie data - returns either a string or an array, or null if the cookie name doesn't exist.
 
-- `name` - Name of the cookie to get (*required*). Will return `undefined` if the cookie does not exist.
+| Param | Type | Description |
+| --- | --- | --- |
+| `name` | string | Name of the cookie to get (*required*). Will return `undefined` if the cookie does not exist. |
 
 ```javascript
 const greet = $myCookies.get('greeting');
@@ -103,7 +143,9 @@ console.log(greet); // returns 'Hello World'
 
 Remove/delete cookie from browser.
 
-- `name` - Name of the cookie to remove/delete (*required*).
+| Param | Type | Description |
+| --- | --- | --- |
+| `name` | string | Name of the cookie to remove/delete (*required*). |
 
 ```javascript
 $myCookies.remove('greeting');
