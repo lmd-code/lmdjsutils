@@ -3,7 +3,7 @@
  * LmdStorage - a lightweight browser storage wrapper
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
- * @version 1.4.1
+ * @version 1.4.2
  * @license GPLv3 
  */
 
@@ -16,7 +16,7 @@ class LmdStorage {
     /**
      * Initialise a store
      * @param {string} storeKey - Name (key) of browser storage item
-     * @param {string} storeType - Type of browser storage to use, 'local' (default) or 'session'
+     * @param {string|null} storeType - Type of browser storage to use, 'local' (default) or 'session'
      * @param {string} mapKey - Optional key for identifying Maps when data is serialised, 
      *                          helps with converting to and from JSON
      */
@@ -25,10 +25,13 @@ class LmdStorage {
         this.storeName = storeKey;
 
         /** @private {string} storeType - Type of storage ('local' or 'session') */
-        this.storageType = storeType;
+        this.storageType = 'local'; // default localStorage
+        if (typeof storeType === 'string' && storeType === 'session') {
+            this.storageType = 'session'; // use sessionStorage instead
+        }
         
         /** @private {string} mapKey - Key for identifying Map objects when stringified as JSON */
-        this.mapKey = mapKey;
+        this.mapKey = (typeof mapKey === 'string' && mapKey !== '') ? mapKey : '_map';
 
         /** @private {Map} data - Data items in key/value pairs */
         this.data = this.getStore();

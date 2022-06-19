@@ -24,43 +24,42 @@ Include the script in the `<head>` of your HTML document. Javascript classes mus
 <script src="path/to/your-script.js"></script>
 ```
 
-Then in your script, initialise the LmdStorage class with the name of your store and the type of storage to use ('local' or 'session').
+In your script, initialise the class with the name of your store (required) and optional parameters.
 
 ```javascript
 new LmdStorage(storeName, storeType, mapKey)
 ```
 
 | Param | Type | Description |
-| ----- | ---- | ----------- |
-| `storeName` | string | |
-| `storeType` | string | Optional. 'local' (default) for `localStorage`, 'session' for `sessionStorage`.|
-| `mapKey` | string | Optional. Token to identify `Map` objects. Only needed to use it under *certain circumstances*. Serialised `Map` objects are indicated by the key '_map' -- if you think that this will clash with a key name in your own data, then you can change it to something else via this parameter. |
-
-If the storage item doesn't exist yet, it will be created when an item is added.
+| --- | --- | --- |
+| `storeName` | string | *[Required]* If the storage item doesn't exist yet, it will be created when data is added. |
+| `storeType` | string\|null | *[Optional]* Set 'local' for `localStorage` (*default*) and 'session' for `sessionStorage`. |
+| `mapKey` | string | *[Optional]* Token to identify serialised `Map` objects. By default the token key '*_map*' is used - you only need to change it if clashes with a key in your own data. |
 
 ```javascript
-// localStorage (you can omit the 'local' param)
+// localStorage (you can actually omit the 'local' param)
 const $myStorage = new LmdStorage('mystore', 'local'); 
+const $myStorage = new LmdStorage('mystore');  // is equivalent to the above
 
-// sessionStorage
+// Specify sessionStorage
 const $myStorage = new LmdStorage('mystore', 'session'); 
 
-// You can have multiple stores, each one is a separate browser storage entry, e.g.,:
+// You can have multiple stores, each one is a separate local storage entry, e.g.,:
 const $userPrefs = new LmdStorage('userPrefs'); // user's website preferences
 const $formData = new LmdStorage('formData'); // unfinished form data/blog posts/comments etc
 
-// When setting a different mapKey, the second parameter ('local' or 'session') is now required
-const $myStorage = new LmdStorage('mystore', 'local', '_mymapkey');
+// When setting a different mapKey, you can set storeType to 'null' to use the default
+const $myStorage = new LmdStorage('mystore', null, '_mymapkey');
 ```
 
 ## Properties
 
 ### `isEnabled`
 
-Save yourself a headache and check if browser storage is available before you use it.
+Save yourself a headache and check if local storage is available before you use it.
 
 ```javascript
-const storageAvailable = $myStorage.isEnabled; // returns boolean true/false
+console.log($myStorage.isEnabled); // returns boolean true/false
 ```
 
 ### `count`
@@ -68,25 +67,41 @@ const storageAvailable = $myStorage.isEnabled; // returns boolean true/false
 Get number of items in your storage item.
 
 ```javascript
-
-let numItems = $myStorage.count; // returns number
+console.log($myStorage.count); // returns number
 ```
 
 ## Methods
 
-### `setItem(key, value, noSave) / setItems({key1: value1, key2: value2}, noSave)`
+### `setItem(key, value, noSave)`
 
-Set a single item by key/value or multiple values as an object, optionally with a `noSave` flag.
+Set a single item by key/value, optionally with a `noSave` flag.
 
-The optional `noSave` flag parameter (boolean) applies to all methods that modify the data and write to browser storage. It prevents immediate automatic saving, which is useful for when you need to make lots of rapid changes (iterating a list of options for example) and only want to save (write) once. Just remember to call the `saveAll()` method (see [`saveAll()`](#saveallmapobject) below) to commit changes.
+| Param | Type | Description |
+| --- | --- | --- |
+| `key` | string | *[Required]* Item key. |
+| `value` | mixed | *[Required]* Item value. |
+| `noSave` | boolean | *[Optional]* Flag to prevent immediate automatic saving. |
+
+**Note:** The optional `noSave` flag applies to all methods that modify the data and write to local storage. It prevents immediate automatic saving, which is useful for when you need to make lots of rapid changes (iterating a list of options for example) and only want to save (write) once. Just remember to call the `saveAll()` method (see [`saveAll()`](#saveallmapobject) below) to commit changes.
 
 ```javascript
-// Set or update a single item 
 $myStorage.setItem('foo', 'Hello World'); // save immediately
-$myStorage.setItem('foo', 'Hello World', true); // with noSave flag
 
-// Set or update multiple items as an object
+$myStorage.setItem('foo', 'Hello World', true); // with noSave flag
+```
+
+### `setItems({key1: value1, ...}, noSave)`
+
+Set multiple values as an object, optionally with a `noSave` flag.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| `{key1: value1, ...}` | object | *[Required]* Item key/value pairs. |
+| `noSave` | boolean | *[Optional]* Flag to prevent immediate automatic saving (see [setItem()](#setitemkey-value-nosave)). |
+
+```javascript
 $myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}); // save immediately
+
 $myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}, true); // with noSave flag
 ```
 
@@ -94,19 +109,25 @@ $myStorage.setItems({foo: 'Hello World', bar: true, baz: 42}, true); // with noS
 
 Get a single item value by key (returns 'undefined' if the key doesn't exist).
 
+| Param | Type | Description |
+| --- | --- | --- |
+| `key` | string | *[Required]* Item key. |
+
 ```javascript
-// Using the items we set above
-let foo = $myStorage.getItem('foo'); // returns string 'Hello World'
-let bar = $myStorage.getItem('bar'); // returns boolean 'true'
-let baz = $myStorage.getItem('baz'); // returns number '42'
-let hey = $myStorage.getItem('hey'); // return undefined
+console.log($myStorage.getItem('foo')); // returns string 'Hello World'
+
+console.log($myStorage.getItem('bar')); // returns boolean 'true'
+
+console.log($myStorage.getItem('baz')); // returns number '42'
+
+console.log($myStorage.getItem('nope')); // return undefined
 ```
 
 ### `getItems()`
 
 The `getItems()` method returns a copy of the internal data `Map` object. You can therefore do everything you can with `Map` objects.
 
-However, it is a *deep copy* and not a reference, so if you update data directly on the returned `Map`, it *will not* update in browser storage. You can save it back, however, by explicitly passing the `Map` object as a parameter to the `saveAll()` method.
+However, it is a *deep copy* and not a reference, so if you update data directly on the returned `Map`, it *will not* update in local storage. You can save it back, however, by explicitly passing the `Map` object as a parameter to the `saveAll()` method.
 
 Useful for if you want a working copy of the data and only want to update the storage under certain circumstances (some sort of user interaction, or example).
 
@@ -117,17 +138,33 @@ See [`getItems()` example code](#example-using-the-getitems-method) below.
 let allPrefs = $myStorage.getItems();
 ```
 
-### `removeItem(key, noSave) / removeItems(['key1', 'key2'], noSave)`
+### `removeItem(key, noSave)`
 
-Remove a single item by key or multple items by an array of keys, optionally with a `noSave` flag (see [setItem()/setItems()](#removeitemkey-nosave--removeitemskey1-key2-nosave)).
+Remove a single item by key, optionally with a `noSave` flag.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| `key` | string | *[Required]* Item key. |
+| `noSave` | boolean | *[Optional]* Flag to prevent immediate automatic saving (see [setItem()](#setitemkey-value-nosave)). |
 
 ```javascript
-// Single Item
 $myStorage.removeItem('bar'); // save immediately
-$myStorage.removeItem('bar', true); // with noSave flag
 
-// Multiple items
+$myStorage.removeItem('bar', true); // with noSave flag
+```
+
+### `removeItems(['key1', ...], noSave)`
+
+Remove multple items by an array of keys, optionally with a `noSave` flag.
+
+| Param | Type | Description |
+| --- | --- | --- |
+| `['key1', ...]` | array | *[Required]* Item keys. |
+| `noSave` | boolean | *[Optional]* Flag to prevent immediate automatic saving (see [setItem()](#setitemkey-value-nosave)). |
+
+```javascript
 $myStorage.removeItems(['bar', 'baz']);
+
 $myStorage.removeItems(['bar', 'baz'], true); // with noSave flag
 ```
 
@@ -135,16 +172,19 @@ $myStorage.removeItems(['bar', 'baz'], true); // with noSave flag
 
 Save all items - overwrites stored data with current state. Useful for when you make several changes using the `noSave` flag and want to save just once.
 
-You can optionally provide a new `Map` object, if you have been working on a separate copy of the data.
+| Param | Type | Description |
+| --- | --- | --- |
+| `mapObj` | Map | *[Optional]* Optionally provide a new `Map` object, if you have been working on a separate copy of the data. |
 
 ```javascript
 $myStorage.saveAll(); // Current data
+
 $myStorage.saveAll(mapObject); // Pass a new Map object (replaces original data)
 ```
 
 ### `clearAll()`
 
-Remove entire store - clears internal data and deletes from browser storage.
+Remove entire store - clears internal data and deletes from local storage.
 
 ```javascript
 $myStorage.clearAll();
@@ -198,7 +238,7 @@ mydata.delete('status');
 console.log(mydata.get('status')); // Copy: undefined
 console.log($myStorage.getItem('status')); // Original: 'I live here!'
 
-// Write changes back to browser storage (will replace data, not merge!)
+// Write changes back to local storage (will replace data, not merge!)
 $myStorage.saveAll(mydata);
 
 // "Original" data:
@@ -208,8 +248,6 @@ console.log($myStorage.getItem('status')); // undefined
 ```
 
 ## General Local Storage Notes
-
-You probably know this, but just in case:
 
 - Unlike cookies, local storage is only accessible within its own domain/sub-domain.  In other words, it is strictly scoped to the same-origin. The domains `example.com`, `www.example.com`, `foo.example.com`, as well as `https://example.com` (encryption enabled) and `http://example.com` do not have access to each other's local storage.
 - Likewise, local storage is not accessible cross-site either -- `test.com` can not access local storage from `example.com`.

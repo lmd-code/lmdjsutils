@@ -8,6 +8,8 @@
 
 Lightweight wrapper for browser cookies.
 
+Data is serialised as a JSON string, allowing stored values to maintain their 'type' (and not be returned as string) so long as they are a valid JSON data type. So, numbers (integers, floats) will be returned as numbers, booleans as boolean, etc; including arrays and objects.
+
 ## Minimum Requirements
 
 - ECMAScript 6 (ES6, aka ECMAScript 2015) capable browsers.
@@ -21,7 +23,7 @@ Include the script in the `<head>` of your HTML document. Javascript classes mus
 <script src="path/to/your-script.js"></script>
 ```
 
-In your script, initialise the cookie class with optional parameters.
+In your script, initialise the class with optional parameters.
 
 ```javascript
 new LmdCookies(prefix, path, domain, secure, sameSite)
@@ -29,11 +31,11 @@ new LmdCookies(prefix, path, domain, secure, sameSite)
 
 | Param | Type | Description |
 | --- | --- | --- |
-| `prefix` | string/null | Prefix for cookie names. When specified, any cookie without the prefix will be ignored (*defaults to no prefix/empty string*). |
-| `path` |  string/null | Absolute path for cookie visibility (*defaults to current path*). |
-| `domain` | string/null | Cookie domain (*defaults to current domain*). |
-| `secure` | boolean | Only send over https (*defaults to `false`*). |
-| `sameSite` | string | Same-origin/cross-site policy: 'lax', 'strict' or 'none' (*defaults to 'lax'*). |
+| `prefix` | string\|null | *[Optional]* Prefix for cookie names. When specified, any cookie without the prefix will be ignored (*defaults to no prefix/empty string*). |
+| `path` |  string\|null | *[Optional]* Absolute path for cookie visibility (*defaults to current path*). |
+| `domain` | string\|null | *[Optional]* Cookie domain (*defaults to current domain*). |
+| `secure` | boolean | *[Optional]* Only send over https (*defaults to `false`*). |
+| `sameSite` | string | *[Optional]* Same-origin/cross-site policy: 'lax' (*default*), 'strict' or 'none'. |
 
 If a prefix is provided, you do not need to use it when setting/getting/removing cookies, it is automatically added.
 
@@ -55,16 +57,18 @@ $myCookies = new LmdCookies(null, null, null, true, 'none');
 Save yourself a headache and check if browser cookies are available before you use them.
 
 ```javascript
-const cookiesAvailable = $myCookies.isEnabled; // returns boolean true/false
+console.log($myCookies.isEnabled); // returns boolean true/false
 ```
 
 ### `count`
 
-Get number of cookies retrieved. **Note:** if using a prefix, it will only count cookies using that prefix.
+Get number of cookies retrieved.
+
+**Note:** if using a prefix, only cookies using that prefix are retrieved and, therefore, counted.
 
 ```javascript
 
-let numItems = $myCookies.count; // returns number
+console.log($myCookies.count); // returns number
 ```
 
 ## Methods
@@ -75,9 +79,9 @@ Set cookie data with optional expiration date (the default creates a 'session' c
 
 | Param | Type | Description |
 | --- | --- | --- |
-| `name` | string | Name of the cookie to set/update, it will create the cookie if it does not exist (*required*). |
-| `value` | mixed | Cookie value can be any value that can be serialised into a JSON string (*required*). |
-| `expires` | string|Date | Cookie expiration date can be a date token string (see [Token Format](#token-format) below) or a `Date` object (*optional, defaults to 'session' cookie*). |
+| `name` | string | *[Required]* Name of the cookie to set/update, it will create the cookie if it does not exist. |
+| `value` | mixed | *[Required]* Cookie value can be any value that can be serialised into a JSON string. |
+| `expires` | string\|Date | *[Optional]* Cookie expiration date can be a date token string (see [Token Format](#token-format) below) or a `Date` object (*defaults to 'session' cookie*). |
 
 ```javascript
 // Expire at the end of the session (default)
@@ -88,6 +92,14 @@ $myCookies.set('greeting', 'Hello World', '1y 6m'); // 1 year, 6 months
 
 // Expire on specified date/time
 $myCookies.set('greeting', 'Hello World', new Date('2025-06-20 11:00:00'));
+
+// Other data types:
+
+$myCookies.set('foo', 42); // number (integer)
+
+$myCookies.set('bar', ['Mercury', 'Venus', 'Earth']); // array
+
+$myCookies.set('baz', true); // boolean
 ```
 
 #### Token Format
@@ -112,7 +124,7 @@ Check whether a cookie exists.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| `name` | string | Name of the cookie to check (*required*). |
+| `name` | string | *[Required]* Name of the cookie to check. |
 
 ```javascript
 console.log($myCookies.has('greeting')); // returns true
@@ -126,11 +138,18 @@ Get cookie data - returns either a string or an array, or null if the cookie nam
 
 | Param | Type | Description |
 | --- | --- | --- |
-| `name` | string | Name of the cookie to get (*required*). Will return `undefined` if the cookie does not exist. |
+| `name` | string | *[Required]* Name of the cookie to get. Will return `undefined` if the cookie does not exist. |
 
 ```javascript
-const greet = $myCookies.get('greeting');
-console.log(greet); // returns 'Hello World'
+console.log($myCookies.get('greeting')); // returns string 'Hello World'
+
+console.log($myCookies.get('foo')); // returns number 42 
+
+console.log($myCookies.get('bar')); // returns array('Mercury', 'Venus', 'Earth')
+
+console.log($myCookies.get('baz')); // return boolean true
+
+console.log($myCookies.get('nope')); // returns undefined
 ```
 
 ### `remove(name)`
@@ -139,12 +158,11 @@ Remove/delete cookie from browser.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| `name` | string | Name of the cookie to remove/delete (*required*). |
+| `name` | string | *[Required]* Name of the cookie to remove/delete. |
 
 ```javascript
 $myCookies.remove('greeting');
 
-// After page refresh
 console.log($myCookies.get('greeting')); // returns undefined
 ```
 

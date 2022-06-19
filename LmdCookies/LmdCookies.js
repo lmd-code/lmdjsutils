@@ -9,12 +9,14 @@
 'use strict';
 
 /**
- * Wrapper class for interacting with browser cookies
+ * Wrapper class for interacting with browser cookies.
+ * 
  * @class
  */
 class LmdCookies {
     /**
-     * Initialise cookies
+     * Initialise and fetch cookies.
+     * 
      * @param {string|null} prefix - Prefix for cookie names (leave blank for no prefix)
      * @param {string|null} path - path for cookie (default: null - uses curent path)
      * @param {string|null} domain - cookie domain (default: null - uses current domain)
@@ -23,7 +25,7 @@ class LmdCookies {
      */
     constructor(prefix = null, path = null, domain = null, secure = false, sameSite = 'lax') {
         /** @private {string} cookiePrefix */
-        this.cookiePrefix = (typeof prefix === 'string' && prefix !== '') ? encodeURIComponent(prefix) + '_' : '';
+        this.cookiePrefix = (typeof prefix === 'string' && prefix !== '') ? prefix + '_' : '';
         
         /** @private {string|null} cookiePath */
         this.cookiePath = (typeof path === 'string' && path !== '') ? path : null;
@@ -39,6 +41,9 @@ class LmdCookies {
 
         /** @private {boolean} _isEnabled - Stores isEnabled result */
         this._isEnabled = null;
+        
+        /** @private {string} cookiePrefixEnc URI encoded prefix */
+        this.cookiePrefixEnc = (this.cookiePrefix !== '') ? encodeURIComponent(prefix) + '_' : '';
 
         // If SameSite = 'none', then enforce secure = true
         if (this.cookieSamesite === 'none') {
@@ -51,7 +56,7 @@ class LmdCookies {
     }
     
     /**
-     * Detect if cookies are available/enabled in user's browser
+     * Detect if cookies are available/enabled in user's browser.
      * @property {boolean} isEnabled
      */
     get isEnabled() {
@@ -85,7 +90,9 @@ class LmdCookies {
     }
 
     /**
-     * @property {number} count - Number of cookies retrieved (accounts for prefix)
+     * Number of cookies retrieved.
+     * When a prefix is used, only cookies using that prefix are counted.
+     * @property {number} count
      */
     get count() {
         if (this.data === undefined || this.data === null) return 0;
@@ -93,7 +100,8 @@ class LmdCookies {
     }
 
     /**
-     * Check whether a cookie name exists
+     * Check whether a cookie name exists.
+     * 
      * @param {string} name Cookie name
      * @returns {boolean}
      */
@@ -103,7 +111,10 @@ class LmdCookies {
     }
     
     /**
-     * Get the cookie value (returns undefined if cookie name does not exist)
+     * Get the cookie value.
+     * 
+     * Returns `undefined` if cookie name does not exist.
+     * 
      * @param {string} name Cookie name
      * @returns {mixed}
      */
@@ -116,7 +127,7 @@ class LmdCookies {
     }
 
     /**
-     * Set/update the cookie value
+     * Set/update the cookie value.
      * 
      * Expiration date can either be token string or a Date object.
      * @see {@link calcExpiresDate} for token string format.
@@ -127,7 +138,8 @@ class LmdCookies {
      */
      set(name, value, expires = 'session') {
         try {
-            let cookieText = this.cookiePrefix + encodeURIComponent(name) + '=';
+            // Use encoded cookie prefix
+            let cookieText = this.cookiePrefixEnc + encodeURIComponent(name) + '=';
 
             cookieText += encodeURIComponent(JSON.stringify(value));
 
@@ -158,16 +170,20 @@ class LmdCookies {
     }
     
     /**
-     * Get all accessible cookies
+     * Get all accessible cookies.
+     * 
+     * When a prefix is provided, only cookies using that prefix will be returned.
+     * 
      * @returns {Object}
      */
      getCookies() {
         const cookies = document.cookie.split(/\s*;\s*/).filter(item => item);
         let cookieJar = Object.create(null);
+
         if (Array.isArray(cookies) && cookies.length > 0) {
             for (const cookie of cookies) {
-                // If a prefix is set, skip cookie if it doesn't match
-                if (this.cookiePrefix !== '' && cookie.indexOf(this.cookiePrefix) !== 0) continue; 
+                // If a prefix is set, skip cookie if it doesn't match (use encoded prefix)
+                if (this.cookiePrefixEnc !== '' && cookie.indexOf(this.cookiePrefixEnc) !== 0) continue; 
 
                 const [key, val] = cookie.split('=').map((item) => decodeURIComponent(item));
                 
@@ -183,15 +199,15 @@ class LmdCookies {
     }
 
     /**
-     * Calculate an cookie expiration date from a date token string
+     * Calculate an cookie expiration date from a date token string.
      * 
      * The date token string format is a *case-insensitive* sequence of 
      * digit/letter pairs, with each pair separated by a space.
      * 
-     * For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours 
+     * For Example: `1y 6m 12h` = 1 year, 6 months and 12 hours.
      * 
      * Date Tokens:
-     * 
+     *
      * - `Y` - Year (`2y` = 2 years)
      * - `M` - Month (`3m` = 3 months)
      * - `D` - Days (`5d` = 5 days)
