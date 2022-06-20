@@ -12,8 +12,8 @@ See the individual README files for more information and usage guidance.
 
 ### [LmdStorage](LmdStorage/README.md)
 
-A lightweight browser storage (`localStorage`/`sessionStorage`) wrapper. Use a single storage item to store multiple values in key/value pairs, including arrays, plain objects and Map objects.
+A lightweight wrapper for interacting with local storage (`localStorage`/`sessionStorage`).
 
 ### [LmdCookies](LmdCookies/README.md)
 
-A lightweight wrapper for browser cookies. Easily set/update, retrieve and delete cookies, configure cookie settings (path, domain, HTTPS only etc) globally or for individual cookies. Use a prefix to namespace cookies.
+A lightweight wrapper for interacting with browser cookies.

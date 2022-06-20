@@ -1,13 +1,9 @@
 
 # LmdStorage
 
----
+A lightweight wrapper for interacting with local storage (`localStorage`/`sessionStorage`).
 
-**Note:** As with all scripts in this repository, I made this for my own small projects where dependency on a larger, more feature-rich, library would be overkill. Feel free to use if you think it's helpful for your projects.
-
----
-
-Lightweight wrapper for local storage (`localStorage`/`sessionStorage`). Use a single local storage item to store multiple values in key/value pairs.
+Use a single local storage item to store multiple values in key/value pairs.
 
 Data is represented as a `Map` object which is serialised and stored as a JSON string. This allows stored values to be any valid JSON data type instead of just strings. You can even store other `Map` objects, they are serialised and restored safely, the only requirement is that item keys must always be a string to be valid JSON.
 
@@ -41,7 +37,7 @@ new LmdStorage(storeName, storeType, mapKey)
 const $myStorage = new LmdStorage('mystore', 'local'); 
 const $myStorage = new LmdStorage('mystore');  // is equivalent to the above
 
-// Specify sessionStorage
+// sessionStorage
 const $myStorage = new LmdStorage('mystore', 'session'); 
 
 // You can have multiple stores, each one is a separate local storage entry, e.g.,:
@@ -155,7 +151,7 @@ $myStorage.removeItem('bar', true); // with noSave flag
 
 ### `removeItems(['key1', ...], noSave)`
 
-Remove multple items by an array of keys, optionally with a `noSave` flag.
+Remove multiple items by an array of keys, optionally with a `noSave` flag.
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -252,3 +248,7 @@ console.log($myStorage.getItem('status')); // undefined
 - Unlike cookies, local storage is only accessible within its own domain/sub-domain.  In other words, it is strictly scoped to the same-origin. The domains `example.com`, `www.example.com`, `foo.example.com`, as well as `https://example.com` (encryption enabled) and `http://example.com` do not have access to each other's local storage.
 - Likewise, local storage is not accessible cross-site either -- `test.com` can not access local storage from `example.com`.
 - However, a third-party script running within your site could still access your domain's local storage, so *do **not** use it to store sensitive data*.
+
+---
+
+**Note:** As with all scripts in this repository, I made this for my own small projects where dependency on a larger, more feature-rich, library would be overkill. Feel free to use if you think it's helpful for your projects.

@@ -2,7 +2,7 @@
  * LmdCookies - a lightweight browser cookie wrapper
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
- * @version 1.0.0 - alpha
+ * @version 1.1.0
  * @license GPLv3 
  */
 
@@ -10,18 +10,16 @@
 
 /**
  * Wrapper class for interacting with browser cookies.
- * 
- * @class
  */
 class LmdCookies {
     /**
      * Initialise and fetch cookies.
      * 
      * @param {string|null} prefix - Prefix for cookie names (leave blank for no prefix)
-     * @param {string|null} path - path for cookie (default: null - uses curent path)
-     * @param {string|null} domain - cookie domain (default: null - uses current domain)
-     * @param {boolean} secure - only send over https (default: false)
-     * @param {string} sameSite - same-origin/cross-site policy (default: 'lax')
+     * @param {string|null} path - Path for cookie (default: null - uses curent path)
+     * @param {string|null} domain - Cookie domain (default: null - uses current domain)
+     * @param {boolean} secure - Only send over https (default: false)
+     * @param {string} sameSite - Same-origin/cross-site policy (default: 'lax')
      */
     constructor(prefix = null, path = null, domain = null, secure = false, sameSite = 'lax') {
         /** @private {string} cookiePrefix */

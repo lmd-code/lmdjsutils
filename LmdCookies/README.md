@@ -1,14 +1,8 @@
 # LmdCookies
 
----
+A lightweight wrapper for interacting with browser cookies.
 
-**Note:** As with all scripts in this repository, I made this for my own small projects where dependency on a larger, more feature-rich, library would be overkill. Feel free to use if you think it's helpful for your projects.
-
----
-
-Lightweight wrapper for browser cookies.
-
-Data is serialised as a JSON string, allowing stored values to maintain their 'type' (and not be returned as string) so long as they are a valid JSON data type. So, numbers (integers, floats) will be returned as numbers, booleans as boolean, etc; including arrays and objects.
+Data is serialised as a JSON string, allowing stored values to maintain their 'type' (string, number, boolean, array, etc) and not be returned as a string by default (values must be a valid JSON data type).
 
 ## Minimum Requirements
 
@@ -34,10 +28,8 @@ new LmdCookies(prefix, path, domain, secure, sameSite)
 | `prefix` | string\|null | *[Optional]* Prefix for cookie names. When specified, any cookie without the prefix will be ignored (*defaults to no prefix/empty string*). |
 | `path` |  string\|null | *[Optional]* Absolute path for cookie visibility (*defaults to current path*). |
 | `domain` | string\|null | *[Optional]* Cookie domain (*defaults to current domain*). |
-| `secure` | boolean | *[Optional]* Only send over https (*defaults to `false`*). |
+| `secure` | boolean | *[Optional]* Only send over HTTPS (*defaults to `false`*). |
 | `sameSite` | string | *[Optional]* Same-origin/cross-site policy: 'lax' (*default*), 'strict' or 'none'. |
-
-If a prefix is provided, you do not need to use it when setting/getting/removing cookies, it is automatically added.
 
 ```javascript
 // Basic - defaults only
@@ -169,5 +161,9 @@ console.log($myCookies.get('greeting')); // returns undefined
 ## General Cookie Notes
 
 - You can only have a total of ~20 cookies per domain (depending on the browser), storing up to a maximum of 4 kb of data each. They are best used with simple data.
-    - If you find you need to store larger quantities of data or complex data types, *and you don't need to share data across subdomains*, then `localStorage` is a better option (see [LmdStorage](../LmdStorage/README.md)).
-- Where `SameSite` is set to `none` (cross-site access allowed), `secure` must be set to `true` (access over 'HTTPS' only), or it may be rejected by modern browsers (this library will set this automatically). If the domain serving the cookie does not have HTTPS, then you can not specify `none` for `SameSite`.
+    - If you find you need to store larger quantities of data or complex data types, *and you don't need to share data across subdomains*, then local storage is a better option (see [LmdStorage](../LmdStorage/README.md)).
+- Where `SameSite` is set to `none` (cross-site access allowed), `secure` must be set to `true` (access over HTTPS only), or it may be rejected by modern browsers (this library will set this automatically). If the domain serving the cookie does not have HTTPS, then you can not specify `none` for `SameSite`.
+
+---
+
+**Note:** As with all scripts in this repository, I made this for my own small projects where dependency on a larger, more feature-rich, library would be overkill. Feel free to use if you think it's helpful for your projects.

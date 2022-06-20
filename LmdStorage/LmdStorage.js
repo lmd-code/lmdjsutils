@@ -1,5 +1,4 @@
 /**
- * 
  * LmdStorage - a lightweight browser storage wrapper
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
@@ -10,7 +9,7 @@
 'use strict';
 
 /**
- * Wrapper class for interacting with browser storage (localStorage/sessionStorage) on an individual storage item level
+ * Wrapper class for interacting with browser storage (localStorage/sessionStorage).
  */
 class LmdStorage {
     /**
