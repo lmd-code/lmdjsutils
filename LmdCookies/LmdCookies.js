@@ -1,5 +1,5 @@
 /**
- * LmdCookies - a lightweight browser cookie wrapper
+ * LmdCookies - a lightweight wrapper for browser cookies
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
  * @version 1.1.0
