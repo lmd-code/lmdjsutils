@@ -3,7 +3,7 @@
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdcode-js-utils/
  * @version 1.1.0
- * @license GPLv3 
+ * @license CC0-1.0
  */
 
 'use strict';
