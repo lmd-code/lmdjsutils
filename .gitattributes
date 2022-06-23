@@ -3,6 +3,8 @@
 .gitattributes export-ignore
 .gitignore     export-ignore
 .gitkeep       export-ignore
+docs           export-ignore
 
 # Exclude from diffs
 *.min.js linguist-generated
+docs/*   linguist-generated
