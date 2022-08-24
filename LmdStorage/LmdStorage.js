@@ -23,7 +23,7 @@ class LmdStorage {
         /** @private {string} storeName - Storage item key */
         this.storeName = storeKey;
 
-        /** @private {string} storeType - Type of storage ('local' or 'session') */
+        /** @private {string} storageType - Type of storage ('local' or 'session') */
         this.storageType = 'local'; // default localStorage
         if (typeof storeType === 'string' && storeType === 'session') {
             this.storageType = 'session'; // use sessionStorage instead
