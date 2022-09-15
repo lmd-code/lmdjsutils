@@ -1,4 +1,4 @@
-# LMD-Code JS Utils
+# LMD JS Utils
 
 Small, self-contained, reusable Javascript utilities.
 
@@ -10,10 +10,10 @@ Feel free to use if you think they are helpful for your projects.
 
 See the individual README files for more information and usage guidance.
 
-### [LmdStorage](LmdStorage/README.md)
+### [LmdStorage](LmdStorage/README.md) v1.4.3
 
 A lightweight wrapper for interacting with local storage (`localStorage`/`sessionStorage`).
 
-### [LmdCookies](LmdCookies/README.md)
+### [LmdCookies](LmdCookies/README.md) v1.1.1
 
 A lightweight wrapper for interacting with browser cookies.
