@@ -1,4 +1,5 @@
 # Ignore .github generated folders
 .github/
-*.min.css
-*.min.js
+
+# Igore dev folder
+dev/

@@ -5,4 +5,5 @@
 .gitkeep       export-ignore
 
 # Exclude from diffs
+CHANGELOG.md linguist-generated
 *.min.js linguist-generated
