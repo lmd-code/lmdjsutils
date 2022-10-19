@@ -182,8 +182,10 @@ $myStorage.saveAll(mapObject); // Pass a new Map object (replaces original data)
 
 Remove entire store - clears internal data and deletes from local storage.
 
+Deletes the named store, not all stores.
+
 ```javascript
-$myStorage.clearAll();
+$myStorage.clearAll(); // deletes $myStorage only
 ```
 
 ## Example using the `getItems()` method

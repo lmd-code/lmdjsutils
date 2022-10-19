@@ -2,7 +2,7 @@
  * LmdStorage - a lightweight wrapper for local browser storage
  * @copyright LMD-Code 2022
  * @see https://github.com/lmd-code/lmdjsutils/
- * @version 1.4.3
+ * @version 1.4.4
  * @license CC0-1.0
  */
 
@@ -185,9 +185,9 @@ class LmdStorage {
         this.data.clear(); // clear Map object
         try {
             if (this.storageType === 'session') {
-                sessionStorage.clear(this.storeName); // remove sessionStorage item
+                sessionStorage.removeItem(this.storeName); // remove sessionStorage item
             } else {
-                localStorage.clear(this.storeName); // remove localStorage item
+                localStorage.removeItem(this.storeName); // remove localStorage item
             }
         } catch (e) {
             console.warn('Could not clear stored data.')

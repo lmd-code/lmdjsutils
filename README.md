@@ -10,7 +10,7 @@ Feel free to use if you think they are helpful for your projects.
 
 See the individual README files for more information and usage guidance.
 
-### [LmdStorage](LmdStorage/README.md) v1.4.3
+### [LmdStorage](LmdStorage/README.md) v1.4.4
 
 A lightweight wrapper for interacting with local storage (`localStorage`/`sessionStorage`).
 
